@@ -1,0 +1,34 @@
+---
+- name: install EPEL repo
+  yum: name=http://fedora.mirrors.pair.com/epel/7/x86_64/e/epel-release-7-2.noarch.rpm state=present
+
+- name: yum update all the things
+  yum: name=* state=latest
+
+- name: install some useful packages 
+  yum: name={{ item }} state=latest enablerepo=epel-testing
+  with_items:
+  - git
+  - python-pip
+  - unzip
+  - python-psphere
+  - ansible 
+
+- name: download Tower setup
+  get_url: url=http://releases.ansible.com/ansible-tower/setup/ansible-tower-setup-{{tower_version}}.tar.gz
+    dest=/opt/ force=yes
+
+- name: extract Tower
+  command: chdir=/opt/ creates=/opt/ansible-tower-setup-{{tower_version}} tar zxvf ansible-tower-setup-{{tower_version}}.tar.gz
+
+- name: run the Tower installer
+  command: chdir=/opt/ansible-tower-setup-{{tower_version}} creates=/etc/awx/settings.py ./setup.sh
+
+- name: create etc ansible directory
+  action: file dest={{configdir}} state=directory
+
+- name: populate etc ansible config
+  copy: src=ansible.cfg dest=/{{configdir}}
+
+- name: install tower cli
+  shell: pip install ansible-tower-cli

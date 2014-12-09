@@ -2,3 +2,11 @@
 - name: download elasticsearch
   get_url: url=https://download.elasticsearch.org/kibana/kibana/kibana-{{ kibana_version }}.tar.gz dest=/tmp/kibana.tar.gz mode=0644
 
+- name: Unarchive Kibana for hosting
+  unarchive: src=/tmp/kibana.tar.gz dest=/opt/
+
+- name: create htpasswd file
+  htpasswd: path=/opt/kibana.htpasswd name=admin password={{ kibana_password }} owner=root group=www-data mode=0640
+
+- name: install Nginx from apt
+  apt: name=nginx state=latest update_cache=yes

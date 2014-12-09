@@ -15,7 +15,7 @@
       "ssh_username": "ubuntu",
       "ami_name": "dualspark elasticsearch demo {{timestamp}}",
       "ami_description": "git sha: {{user `version_id`}}",
-      "vpc_id": "vpc-aa986ecf"
+      "vpc_id": "vpc-264ebc43"
     }
   ],
   "provisioners": [

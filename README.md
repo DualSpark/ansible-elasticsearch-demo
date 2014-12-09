@@ -9,7 +9,7 @@ vagrant up
 
 To log into tower:
 
-https://10.42.0.10
+https://tower.vagrant.dev
 
 username: admin
 password: password

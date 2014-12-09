@@ -7,6 +7,7 @@ VAGRANTFILE_API_VERSION = '2'
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   if Vagrant.has_plugin?('landrush')
+    puts '*** Landrush enabled ***'
     config.landrush.enabled = true
     config.landrush.tld = 'dev'
     config.landrush.guest_redirect_dns = false

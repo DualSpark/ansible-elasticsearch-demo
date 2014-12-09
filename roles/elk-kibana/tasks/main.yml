@@ -1,0 +1,4 @@
+---
+- name: download elasticsearch
+  get_url: url=https://download.elasticsearch.org/kibana/kibana/kibana-{{ kibana_version }}.tar.gz dest=/tmp/kibana.tar.gz mode=0644
+

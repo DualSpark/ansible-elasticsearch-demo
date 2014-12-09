@@ -6,10 +6,7 @@
   apt: pkg=default-jre-headless state=present update_cache=yes
 
 - name: Install ElasticSearch
-  command: sudo dpkg -i /tmp/elasticsearch.deb creates=/etc/elasticsearch
-
-- name: Set ulimit
-  command: sudo ulimit -l unlimited
+  command: dpkg -i /tmp/elasticsearch.deb creates=/etc/elasticsearch
 
 - name: Configure ElasticSearch
   template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml mode=0644

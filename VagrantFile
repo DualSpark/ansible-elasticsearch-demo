@@ -16,13 +16,20 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.define 'tower' do |tower|
     tower.vm.box = 'matyunin/centos7'
-    tower.vm.network 'private_network', type: 'dhcp'
+
+    if Vagrant.has_plugin?('landrush')
+      tower.vm.network 'private_network', type: 'dhcp'
+    else
+      tower.vm.network 'private_network', ip: '10.42.0.10'
+    end
+
     tower.vm.hostname = 'tower.vagrant.dev'
     tower.vm.provider 'virtualbox' do |vb|
       vb.customize ['modifyvm', :id, '--memory', '2048']
     end
-    tower.vm.provision 'file', source: '.boto.cfg', destination: '/tmp/boto.cfg'
-    tower.vm.provision 'shell', inline: 'sudo mv /tmp/boto.cfg /etc/boto.cfg'
+
+    tower.vm.provision 'script', path: 'tower.configs.sh'
+    
     tower.vm.provision 'ansible' do |ansible|
       ansible.playbook = 'tower.yml'
       ansible.verbose = 'v'
@@ -35,7 +42,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.define 'elasticsearch' do |es|
     es.vm.box = 'ubuntu1404lts'
     es.vm.box_url = 'https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box'
-    es.vm.network 'private_network', type: 'dhcp'
+
+    if Vagrant.has_plugin?('landrush')
+      es.vm.network 'private_network', type: 'dhcp'
+    else
+      es.vm.network 'private_network', ip: '10.42.0.20'
+    end
+
     es.vm.hostname = 'elasticsearch.vagrant.dev'
     es.vm.provision 'ansible' do |ansible|
       ansible.playbook = 'elasticsearch.dev.yml'

@@ -14,22 +14,36 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     config.landrush.guest_redirect_dns = false
   end
 
-  config.vm.box = 'matyunin/centos7'
-  config.vm.network 'private_network', type: 'dhcp'
-  config.vm.hostname = 'tower.vagrant.dev'
-
-  config.vm.provider :virtualbox do |vb, override|
-    vb.customize ['modifyvm', :id, '--memory', '2048']
+  config.vm.define 'tower' do |tower|
+    tower.vm.box = 'matyunin/centos7'
+    tower.vm.network 'private_network', type: 'dhcp'
+    tower.vm.hostname = 'tower.vagrant.dev'
+    tower.vm.provider 'virtualbox' do |vb|
+      vb.customize ['modifyvm', 'id', '--memory', '2048']
+    end
+    tower.vm.provision 'file', source: '.boto.cfg', destination: '/tmp/boto.cfg'
+    tower.vm.provision 'shell', inline: 'sudo mv /tmp/boto.cfg /etc/boto.cfg'
+    tower.vm.provision 'ansible' do |ansible|
+      ansible.playbook = 'tower.yml'
+      ansible.verbose = 'v'
+      ansible.sudo = 'true'
+      ansible.sudo_user = 'root'
+      ansible.host_key_checking = 'false'
+    end
   end
 
-  config.vm.provision 'file', source: '.boto.cfg', destination: '/tmp/boto.cfg'
-  config.vm.provision 'shell', inline: 'sudo mv /tmp/boto.cfg /etc/boto.cfg'
-
-  config.vm.provision 'ansible' do |ansible|
-    ansible.playbook = 'tower.yml'
-    ansible.verbose = 'v'
-    ansible.sudo = 'true'
-    ansible.sudo_user = 'root'
-    ansible.host_key_checking = 'false'
+  config.vm.define 'elasticsearch' do |es|
+    es.vm.box = 'ubuntu1404lts'
+    es.vm.box_url = 'https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-amd64-vagrant-disk1.box'
+    es.vm.network 'private_network', type: 'dhcp'
+    es.vm.hostname = 'elasticsearch.vagrant.dev'
+    es.vm.provision 'ansible' do |ansible|
+      ansible.playbook = 'elasticsearch.dev.yml'
+      ansible.verbose = 'v' 
+      ansible.sudo = 'true'
+      ansible.sudo_user = 'root'
+      ansible.host_key_checking = 'false'
+    end
   end
+
 end

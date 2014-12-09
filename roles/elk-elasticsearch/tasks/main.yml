@@ -1,0 +1,21 @@
+---
+- name: download elasticsearch
+  get_url: url=https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-{{ elasticsearch_version }}.deb dest=/tmp/elasticsearch.deb mode=0644
+
+- name: Configure the ElasticSearch APT repositories
+  apt_repository: repo="deb http://packages.elasticsearch.org/elasticsearch/1.4/debian stable main"
+                  state=present
+
+- name: Install OpenJDK7
+  apt: pkg=default-jre-headless state=present
+
+- name: Install ElasticSearch
+  command: sudo dpkg -i /tmp/elasticsearch.deb creates=/etc/elasticsearch
+
+- name: Configure ElasticSearch
+  template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml mode=0644
+  notify:
+    - Restart ElasticSearch
+
+- name: Enable ElasticSearch service
+  service: name=elasticsearch enabled=yes state=started

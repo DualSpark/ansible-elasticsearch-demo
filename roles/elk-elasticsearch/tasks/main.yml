@@ -13,5 +13,10 @@
   notify:
     - Restart ElasticSearch
 
+- name: Install Elasticsearch Plugins
+  command: "{{ elasticsearch_base_dir }}/bin/plugin -install {{ item }}"
+  with_items: 
+    - "{{ plugin_install }}"
+
 - name: Enable ElasticSearch service
   service: name=elasticsearch enabled=yes state=started

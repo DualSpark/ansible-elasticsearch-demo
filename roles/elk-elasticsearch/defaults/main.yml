@@ -6,4 +6,9 @@ elasticsearch_tcp_port: "9300"
 elasticsearch_http_port: "9200"
 index_number_of_shards: 20
 index_number_of_replicas: 1
-plugin_mandatory: "aws-cloud,elasticsearch-HQ"
+elasticsearch_base_dir: /usr/share/elasticsearch
+plugin_mandatory: "elasticsearch-cloud-aws,bigdesk,elasticsearch-HQ"
+plugin_install: 
+  - "elasticsearch/elasticsearch-cloud-aws/2.4.1"
+  - "lukas-vlcek/bigdesk/2.5.0"
+  - "royrusso/elasticsearch-HQ"

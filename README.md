@@ -39,7 +39,6 @@ Otherwise, you can use the IP address directly:
 
 ```https://10.42.0.10```
 
-
 Credentials for logging in the first time are:
 
 * username: admin

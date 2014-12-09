@@ -15,14 +15,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   end
 
   config.vm.box = 'matyunin/centos7'
-    config.vm.define 'tower', primary: true do |tower|
-      config.vm.provider :virtualbox do |vb, override|
-        vb.customize ['modifyvm', :id, '--memory', '2048']
-      end
-    tower.vm.network 'private_network', type: 'dhcp'
-  end
-
+  config.vm.network 'private_network', type: 'dhcp'
   config.vm.hostname = 'tower.vagrant.dev'
+
+  config.vm.provider :virtualbox do |vb, override|
+    vb.customize ['modifyvm', :id, '--memory', '2048']
+  end
 
   config.vm.provision 'file', source: '.boto.cfg', destination: '/tmp/boto.cfg'
   config.vm.provision 'shell', inline: 'sudo mv /tmp/boto.cfg /etc/boto.cfg'

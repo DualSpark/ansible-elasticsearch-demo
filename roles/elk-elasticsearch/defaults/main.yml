@@ -4,3 +4,6 @@ elasticsearch_cluster_name: "elasticsearch"
 elasticsearch_bind_host: "0.0.0.0"
 elasticsearch_tcp_port: "9300"
 elasticsearch_http_port: "9200"
+index_number_of_shards: 20
+index_number_of_replicas: 1
+plugin_mandatory: "aws-cloud,elasticsearch-HQ"

@@ -29,7 +29,7 @@
 # Cluster name identifies your cluster for auto-discovery. If you're running
 # multiple clusters on the same network, make sure you're using unique names.
 #
-cluster.name: {{ elasticsearch_cluster_name }}
+cluster.name: {{ elasticsearch_cluster_name | default('elasticsearch') }}
 
 
 #################################### Node #####################################
@@ -104,11 +104,11 @@ cluster.name: {{ elasticsearch_cluster_name }}
 
 # Set the number of shards (splits) of an index (5 by default):
 #
-#index.number_of_shards: 5
+index.number_of_shards: {{ index_number_of_shards | default(20) }}
 
 # Set the number of replicas (additional copies) of an index (1 by default):
 #
-#index.number_of_replicas: 1
+index.number_of_replicas: {{ index_number_of_replicas | default(1) }}
 
 # Note, that for development on a local machine, with small indices, it usually
 # makes sense to "disable" the distributed features:
@@ -171,7 +171,7 @@ cluster.name: {{ elasticsearch_cluster_name }}
 
 # If a plugin listed here is not installed for current node, the node will not start.
 #
-#plugin.mandatory: mapper-attachments,lang-groovy
+plugin.mandatory: {{ plugin_mandatory | default('cloud-aws')}}
 
 
 ################################### Memory ####################################
@@ -181,7 +181,7 @@ cluster.name: {{ elasticsearch_cluster_name }}
 #
 # Set this property to true to lock the memory:
 #
-#bootstrap.mlockall: true
+bootstrap.mlockall: {{ bootstrap_mlockall | default('true') }}
 
 # Make sure that the ES_MIN_MEM and ES_MAX_MEM environment variables are set
 # to the same value, and that the machine has enough memory to allocate
@@ -200,7 +200,7 @@ cluster.name: {{ elasticsearch_cluster_name }}
 
 # Set the bind address specifically (IPv4 or IPv6):
 #
-network.bind_host: {{ elasticsearch_bind_host }}
+network.bind_host: {{ elasticsearch_bind_host | default('0.0.0.0') }}
 
 # Set the address other nodes will use to communicate with this node. If not
 # set, it is automatically derived. It must point to an actual IP address.
@@ -213,23 +213,23 @@ network.bind_host: {{ elasticsearch_bind_host }}
 
 # Set a custom port for the node to node communication (9300 by default):
 #
-transport.tcp.port: {{ elasticsearch_tcp_port }}
+transport.tcp.port: {{ elasticsearch_tcp_port | default('9300') }}
 
 # Enable compression for all communication between nodes (disabled by default):
 #
-#transport.tcp.compress: true
+transport.tcp.compress: {{ transport_tcp_compress | default('true') }}
 
 # Set a custom port to listen for HTTP traffic:
 #
-http.port: {{ elasticsearch_http_port }}
+http.port: {{ elasticsearch_http_port | default('9200') }}
 
 # Set a custom allowed content length:
 #
-#http.max_content_length: 100mb
+http.max_content_length: {{ http_max_content_length | default('100mb') }}
 
 # Disable HTTP completely:
 #
-#http.enabled: false
+http.enabled: {{ http_enabled | default('true') }}
 
 
 ################################### Gateway ###################################
@@ -244,7 +244,7 @@ http.port: {{ elasticsearch_http_port }}
 
 # The default gateway type is the "local" gateway (recommended):
 #
-#gateway.type: local
+gateway.type: {{ gateway_type | default('local') }}
 
 # Settings below control how and when to start the initial recovery process on
 # a full cluster restart (to reuse as much local data as possible when using shared
@@ -252,18 +252,18 @@ http.port: {{ elasticsearch_http_port }}
 
 # Allow recovery process after N nodes in a cluster are up:
 #
-#gateway.recover_after_nodes: 1
+gateway.recover_after_nodes: {{ gateway_recover_after_nodes | default(1) }}
 
 # Set the timeout to initiate the recovery process, once the N nodes
 # from previous setting are up (accepts time value):
 #
-#gateway.recover_after_time: 5m
+gateway.recover_after_time: {{ gateway_recover_after_time | default('5m') }}
 
 # Set how many nodes are expected in this cluster. Once these N nodes
 # are up (and recover_after_nodes is met), begin recovery process immediately
 # (without waiting for recover_after_time to expire):
 #
-#gateway.expected_nodes: 2
+gateway.expected_nodes: {{ gateway_expected_nodes | default(2) }}
 
 
 ############################# Recovery Throttling #############################
@@ -276,20 +276,20 @@ http.port: {{ elasticsearch_http_port }}
 #
 # 1. During the initial recovery
 #
-#cluster.routing.allocation.node_initial_primaries_recoveries: 4
+cluster.routing.allocation.node_initial_primaries_recoveries: {{ cluster_routing_allocation_node_initial_primaries_recoveries | default(4) }}
 #
 # 2. During adding/removing nodes, rebalancing, etc
 #
-#cluster.routing.allocation.node_concurrent_recoveries: 2
+cluster.routing.allocation.node_concurrent_recoveries: {{ cluster_routing_allocation_node_concurrent_recoveries | default(2) }}
 
 # Set to throttle throughput when recovering (eg. 100mb, by default 20mb):
 #
-#indices.recovery.max_bytes_per_sec: 20mb
+indices.recovery.max_bytes_per_sec: {{ indices_recovery_max_bytes_per_sec | default('100mb') }}
 
 # Set to limit the number of open concurrent streams when
 # recovering a shard from a peer:
 #
-#indices.recovery.concurrent_streams: 5
+indices.recovery.concurrent_streams: {{ indices_recovery_concurrent_streams | default(20) }}
 
 
 ################################## Discovery ##################################
@@ -301,13 +301,13 @@ http.port: {{ elasticsearch_http_port }}
 # operational within the cluster. This should be set to a quorum/majority of
 # the master-eligible nodes in the cluster.
 #
-#discovery.zen.minimum_master_nodes: 1
+discovery.zen.minimum_master_nodes: {{ discovery_zen_minimum_master_nodes | default(1) }}
 
 # Set the time to wait for ping responses from other nodes when discovering.
 # Set this option to a higher value on a slow or congested network
 # to minimize discovery failures:
 #
-#discovery.zen.ping.timeout: 3s
+discovery.zen.ping.timeout: {{ discovery_zen_ping_timeout | default('3s') }}
 
 # For more information, see
 # <http://elasticsearch.org/guide/en/elasticsearch/reference/current/modules-discovery-zen.html>
@@ -318,7 +318,7 @@ http.port: {{ elasticsearch_http_port }}
 #
 # 1. Disable multicast discovery (enabled by default):
 #
-#discovery.zen.ping.multicast.enabled: false
+discovery.zen.ping.multicast.enabled: {{ discovery_zen_ping_multicast_enabled | default('false') }}
 #
 # 2. Configure an initial list of master nodes in the cluster
 #    to perform discovery when new nodes (master or data) are started:
@@ -351,30 +351,30 @@ http.port: {{ elasticsearch_http_port }}
 
 # Shard level query and fetch threshold logging.
 
-#index.search.slowlog.threshold.query.warn: 10s
-#index.search.slowlog.threshold.query.info: 5s
-#index.search.slowlog.threshold.query.debug: 2s
-#index.search.slowlog.threshold.query.trace: 500ms
+index.search.slowlog.threshold.query.warn: {{ index_search_slowlog_threshold_query_warn | default('10s') }}
+index.search.slowlog.threshold.query.info: {{ index_search_slowlog_threshold_query_info | default('5s') }}
+index.search.slowlog.threshold.query.debug: {{ index_search_slowlog_threshold_query_debug | default('2s') }}
+index.search.slowlog.threshold.query.trace: {{ index_search_slowlog_threshold_query_trace | default('500ms') }}
 
-#index.search.slowlog.threshold.fetch.warn: 1s
-#index.search.slowlog.threshold.fetch.info: 800ms
-#index.search.slowlog.threshold.fetch.debug: 500ms
-#index.search.slowlog.threshold.fetch.trace: 200ms
+index.search.slowlog.threshold.fetch.warn: {{ index_search_slowlog_threshold_fetch_warn | default('1s') }}
+index.search.slowlog.threshold.fetch.info: {{ index_search_slowlog_threshold_fetch_info | default('800ms') }}
+index.search.slowlog.threshold.fetch.debug: {{ index_search_slowlog_threshold_fetch_debug | default('500ms') }}
+index.search.slowlog.threshold.fetch.trace: {{ index_search_slowlog_threshold_fetch_trace | default('200ms') }}
 
-#index.indexing.slowlog.threshold.index.warn: 10s
-#index.indexing.slowlog.threshold.index.info: 5s
-#index.indexing.slowlog.threshold.index.debug: 2s
-#index.indexing.slowlog.threshold.index.trace: 500ms
+index.indexing.slowlog.threshold.index.warn: {{ index_indexing_slowlog_threshold_index_warn | default('10s') }}
+index.indexing.slowlog.threshold.index.info: {{ index_indexing_slowlog_threshold_index_info | default('5s') }}
+index.indexing.slowlog.threshold.index.debug: {{ index_indexing_slowlog_threshold_index_debug | default('2s') }}
+index.indexing.slowlog.threshold.index.trace: {{ index_indexing_slowlog_threshold_index_trace | default('500ms') }}
 
 ################################## GC Logging ################################
 
-#monitor.jvm.gc.young.warn: 1000ms
-#monitor.jvm.gc.young.info: 700ms
-#monitor.jvm.gc.young.debug: 400ms
+monitor.jvm.gc.young.warn: {{ monitor_jvm_gc_young_warn | default('1000ms') }}
+monitor.jvm.gc.young.info: {{ monitor_jvm_gc_young_info | default('700ms') }}
+monitor.jvm.gc.young.debug: {{ monitor_jvm_gc_young_debug | default('400ms') }}
 
-#monitor.jvm.gc.old.warn: 10s
-#monitor.jvm.gc.old.info: 5s
-#monitor.jvm.gc.old.debug: 2s
+monitor.jvm.gc.old.warn: {{ monitor_jvm_gc_old_warn | default('10s') }}
+monitor.jvm.gc.old.info: {{ monitor_jvm_gc_old_info | default('5s') }}
+monitor.jvm.gc.old.debug: {{ monitor_jvm_gc_old_debug | default('2s') }}
 
 ################################## Security ################################
 

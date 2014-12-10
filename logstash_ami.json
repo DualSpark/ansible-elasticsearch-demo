@@ -2,7 +2,8 @@
   "variables": {
     "aws_access_key": "",
     "aws_secret_key": "",
-    "version_id": ""
+    "version_id": "manual dev build",
+    "default_vpc_id": "vpc-264ebc43"
   },
   "builders": [
     {
@@ -15,13 +16,22 @@
       "ssh_username": "ubuntu",
       "ami_name": "eipi base puppet-elk_logstash {{timestamp}}",
       "ami_description": "git sha: {{user `version_id`}}",
-      "vpc_id": "vpc-264ebc43"
+      "vpc_id": "{{user `default_vpc_id`}}"
     }
   ],
   "provisioners": [
     {
-  "type": "ansible-local",
-  "playbook_file": "logstash_aws.yml"
-}
+      "type": "shell",
+      "inline": [
+        "/usr/bin/sudo /usr/bin/apt-get -y update",
+        "/usr/bin/sudo /usr/bin/apt-get -y install python-pip python-dev",
+        "/usr/bin/sudo /usr/bin/pip install ansible"
+      ]
+    },
+    {
+      "type": "ansible-local",
+      "playbook_file": "logstash.ami.yml",
+      "playbook_dir": "."
+    }
   ]
 }

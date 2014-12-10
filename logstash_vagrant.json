@@ -1,0 +1,121 @@
+{
+  "variables": {
+    "version": "0.1.0",
+    "cleanup_pause": "",
+    "headless": "",
+    "update": "true",
+    "http_proxy": "{{env `http_proxy`}}",
+    "https_proxy": "{{env `https_proxy`}}",
+    "ftp_proxy": "{{env `ftp_proxy`}}",
+    "rsync_proxy": "{{env `rsync_proxy`}}",
+    "no_proxy": "{{env `no_proxy`}}",
+    "iso_url": "http://releases.ubuntu.com/14.04/ubuntu-14.04.1-server-amd64.iso",
+    "iso_checksum": "401c5f6666fe2879ac3a9a3247b487723410cf88"
+  },
+  "builders": [
+    {
+      "vm_name": "puppetElkLogstash",
+      "type": "virtualbox-iso",
+      "http_directory": "http",
+      "iso_url": "{{ user `iso_url` }}",
+      "iso_checksum": "{{ user `iso_checksum` }}",
+      "iso_checksum_type": "sha1",
+      "guest_os_type": "Ubuntu_64",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "virtualbox_version_file": ".vbox_version",
+      "headless": "{{ user `headless` }}",
+      "ssh_username": "vagrant",
+      "ssh_password": "vagrant",
+      "ssh_wait_timeout": "10000s",
+      "boot_command": [
+        "<esc><esc><enter><wait>",
+        "/install/vmlinuz noapic ",
+        "preseed/url=http://{{ .HTTPIP }}:{{ .HTTPPort }}/preseed.cfg ",
+        "debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+        "hostname={{ .Name }} ",
+        "fb=false debconf/frontend=noninteractive ",
+        "keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+        "keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+        "initrd=/install/initrd.gz -- <enter>"
+      ],
+      "shutdown_command": "sudo -S shutdown -P now",
+      "disk_size": 8192,
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "1024"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "1"
+        ]
+      ]
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "environment_vars": [
+        "CLEANUP_PAUSE={{user `cleanup_pause`}}",
+        "UPDATE={{user `update`}}",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy={{user `https_proxy`}}",
+        "ftp_proxy={{user `ftp_proxy`}}",
+        "rsync_proxy={{user `rsync_proxy`}}",
+        "no_proxy={{user `no_proxy`}}"
+      ],
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
+      "scripts": [
+        "scripts/update.sh",
+        "scripts/vagrant.sh",
+        "scripts/sshd.sh",
+        "scripts/virtualboxtools.sh"
+      ]
+    },
+    {
+      "type": "file",
+      "source": "files/beaver.init.d",
+      "destination": "/tmp/beaver"
+    },
+    {
+      "type": "file",
+      "source": "files/aws.dynamic.facts.sh",
+      "destination": "/tmp/aws_facts.sh"
+    },
+    {
+      "type": "file",
+      "source": "files/logstash.indexer.conf",
+      "destination": "/tmp/logstash.conf"
+    },
+    {
+      "type": "shell",
+      "environment_vars": [
+        "CLEANUP_PAUSE={{user `cleanup_pause`}}",
+        "UPDATE={{user `update`}}",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy={{user `https_proxy`}}",
+        "ftp_proxy={{user `ftp_proxy`}}",
+        "rsync_proxy={{user `rsync_proxy`}}",
+        "no_proxy={{user `no_proxy`}}"
+      ],
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -E -S bash '{{.Path}}'",
+      "scripts": [
+        "scripts/sudoers.sh", 
+        "scripts/python-utils.sh",
+        "scripts/puppet.sh",
+        "scripts/elk-logstash.sh"
+      ]
+    }
+  ],
+  "post-processors": [
+    {
+      "type": "vagrant",
+      "keep_input_artifact": false,
+      "output": "box/{{.Provider}}/ubuntu1404-puppet-elk_logstash-{{user `version`}}.box"
+    }
+  ]
+}

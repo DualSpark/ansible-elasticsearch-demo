@@ -1,0 +1,16 @@
+input {
+	sqs {
+		queue => "{{ input_sqs_queuename | default("REPLACEQUEUENAME") }}"
+		region => "{{ input_sqs_region | default("REPLACEQUEUEREGION") }}"
+		threads => {{ input_sqs_threads | default(30) }}
+	}
+}
+
+output {
+	elasticsearch {
+		protocol => "http"
+		host => "{{ logstash_output_host | default("REPLACEELASTICSEARCHHOST") }}"
+		port => "{{ logstash_http_port | default("9200") }}"
+		flush_size => {{ logstash_es_flush_size | default("500") }}
+	}
+}

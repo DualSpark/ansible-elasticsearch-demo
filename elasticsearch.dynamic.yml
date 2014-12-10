@@ -1,4 +1,4 @@
-- name: Test Elasticsearch
+- name: Elasticsearch cluster config
   hosts: elasticsearch
   sudo: true
   

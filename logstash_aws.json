@@ -20,22 +20,8 @@
   ],
   "provisioners": [
     {
-      "type": "file",
-      "source": "files/beaver.init.d",
-      "destination": "/tmp/beaver"
-    },
-    {
-      "type": "file",
-      "source": "files/logstash.indexer.conf",
-      "destination": "/tmp/logstash.conf"
-    },
-    {
-      "type": "shell",
-      "execute_command": "{{ .Vars }} sudo -E -S sh '{{ .Path }}'",
-      "scripts": [
-        "scripts/update-python-utils.sh",
-        "scripts/elk-logstash.sh"
-      ]
-    }
+  "type": "ansible-local",
+  "playbook_file": "logstash_aws.yml"
+}
   ]
 }

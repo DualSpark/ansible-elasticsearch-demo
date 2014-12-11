@@ -106,7 +106,7 @@
         }, 
         "dateGenerated": {
             "Description": "UTC datetime representation of when this template was generated", 
-            "Value": "2014-12-11 05:24:30.458208"
+            "Value": "2014-12-11 05:33:02.500803"
         }, 
         "elbAccessLoggingBucketAndPath": {
             "Description": "S3 bucket and key name prefix to use when configuring elb access logs to aggregate to S3", 
@@ -125,7 +125,7 @@
         }, 
         "templateValidationHash": {
             "Description": "Hash of this template that can be used as a simple means of validating whether a template has been changed since it was generated.", 
-            "Value": "1a5669a78eeda85ce4c2a89ec0035e4f564c8b8737bba230e39086cb28838a3d"
+            "Value": "4efc4b576382dc31383f36f96e00b6f3e20080ae9055a7cdec5262fad0c668ca"
         }
     }, 
     "Parameters": {
@@ -172,7 +172,7 @@
         "ec2Key": {
             "AllowedPattern": "[\\x20-\\x7E]*", 
             "ConstraintDescription": "can only contain ASCII chacacters.", 
-            "Default": "pmdev", 
+            "Default": "", 
             "Description": "Name of an existing EC2 KeyPair to enable SSH access to the instances", 
             "MaxLength": 255, 
             "MinLength": 1, 
@@ -775,7 +775,7 @@
                         "Ref": "vpc"
                     }
                 }, 
-                "TemplateURL": "https://cfdev-dualspark.s3.amazonaws.com/devtools/elk.1418275470.template", 
+                "TemplateURL": "https://cfdev-dualspark.s3.amazonaws.com/devtools/elk.1418275982.template", 
                 "TimeoutInMinutes": "20"
             }, 
             "Type": "AWS::CloudFormation::Stack"

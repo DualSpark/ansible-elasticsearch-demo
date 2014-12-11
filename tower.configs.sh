@@ -8,7 +8,6 @@ fi
 if [ -f /vagrant/.tower.license ];
 then 
 	sudo mkdir -p /etc/awx
-	sudo chown awx:awx /etc/awx
 	sudo chmod 770 /etc/awx -R
 	sudo cp /vagrant/.tower.license /etc/awx/license
 fi

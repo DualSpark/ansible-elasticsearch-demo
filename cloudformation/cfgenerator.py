@@ -10,7 +10,7 @@ Options:
   -h --help                     Show this screen.
   -v --version                  Show version.
   --debug                       Prints parent template to console out [Default: 0]
-  --output_file <OUTPUT_FILE>   Destination to print the output file to (if desired) [Default: devdeploy.debug.template]
+  --output_file <OUTPUT_FILE>   Destination to print the output file to (if desired) [Default: elkenvironment.debug.template]
   --aws_region <AWS_REGION>     Override to configuration arguments to set region by command line for deployment
   --s3_bucket <S3_BUCKET>       Override to configuration arguments to set s3 bucket to upload templates to 
 '''

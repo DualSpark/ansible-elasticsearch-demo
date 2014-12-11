@@ -3,4 +3,5 @@
   sudo: true
   
   roles:
+  - cfnbuilder
   - tower

@@ -14,4 +14,7 @@
   shell: chdir=/vagrant/cloudformation python demokeys.py create --region {{ aws_region }} creates=/vagrant/cloudformation/keyparams.json
 
 - name: generate cloudformation template
-  shell: chdir=/vagrant/cloudformation python cfgenerator.py build --aws_region {{ aws_region }} --s3_bucket {{ s3_bucket }}
+  shell: chdir=/vagrant/cloudformation creates=/vagrant/cloudformation/{{ cf_template_name | default('elkenvironment.debug.template') }} python cfgenerator.py build local_dev_args.json --aws_region {{ aws_region }} --s3_bucket {{ s3_bucket }} --output_file {{ cf_template_name | default('elkenvironment.debug.template') }}
+
+- name: upload template to s3_bucket
+  shell: creates=/vagrant/cloudformation/upload.log aws s3 cp /vagrant/cloudformation/{{ cf_template_name | default('elkenvironment.debug.template') }} s3://{{ s3_bucket }}/{{ cf_template_name | default('elkenvironment.debug.template') }} --region {{ aws_region }} > /vagrant/cloudformation/upload.log

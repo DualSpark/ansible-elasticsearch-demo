@@ -4,13 +4,15 @@ cfgenerator.py
 
 Usage: 
     cfgenerator.py build [<config_file>] [--debug] [--output_file <OUTPUT_FILE>]
+                         [--aws_region <AWS_REGION>] [--s3_bucket <S3_BUCKET>]
 
 Options: 
   -h --help                     Show this screen.
   -v --version                  Show version.
   --debug                       Prints parent template to console out [Default: 0]
   --output_file <OUTPUT_FILE>   Destination to print the output file to (if desired) [Default: devdeploy.debug.template]
-
+  --aws_region <AWS_REGION>     Override to configuration arguments to set region by command line for deployment
+  --s3_bucket <S3_BUCKET>       Override to configuration arguments to set s3 bucket to upload templates to 
 '''
 from environmentbase.networkbase import NetworkBase
 from elk.elk import Elk
@@ -39,12 +41,21 @@ class DevDeploy(NetworkBase):
                       "Action": [ "sts:AssumeRole" ]}]}
 
     def __init__(self, 
-                 arg_dict):
+                 arg_dict, 
+                 aws_region = None, 
+                 bucket_name = None):
         '''
         Method initializes the DevDeploy class and composes the CloudFormation template to deploy the solution 
         @param arg_dict [dict] collection of keyword arguments for this class implementation
         '''
         NetworkBase.__init__(self, arg_dict)
+        
+        if aws_region != None and 'boto' in arg_dict: 
+            arg_dict['boto']['region'] = aws_region
+
+        if bucket_name != None and 'template' in arg_dict: 
+            arg_dict['template']['s3_bucket'] = bucket_name
+
         elk_tier = Elk(arg_dict)
         elk_tier = self.add_child_template('elk', elk_tier)
         self.add_ha_bastion_instance(elk_tier, arg_dict.get('bastion', {}))

@@ -11,6 +11,4 @@ then
 	sudo chown awx:awx /etc/awx
 	sudo chmod 770 /etc/awx -R
 	sudo cp /vagrant/.tower.license /etc/awx/license
-	sudo chown awx:awx /etc/awx/license
-	sudo chmod 400 /etc/awx/license
 fi

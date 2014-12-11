@@ -2,4 +2,16 @@
 - name: install cloudformation build dependencies
   shell: /usr/bin/pip install -r /vagrant/cloudformation/requirements.txt
 
+- name: install python-pip 
+  yum: name={{ item }} state=latest enablerepo=epel-testing
+  with_items:
+  - python-pip
 
+- name: install aws cli for cloudformation deployment
+  shell: pip install awscli
+
+- name: create AWS EC2 Keys
+  shell: chdir=/vagrant/cloudformation python demokeys.py create --region {{ aws_region }} creates=/vagrant/cloudformation/keyparams.json
+
+- name: generate cloudformation template
+  shell: chdir=/vagrant/cloudformation python cfgenerator.py build --aws_region {{ aws_region }} --s3_bucket {{ s3_bucket }}

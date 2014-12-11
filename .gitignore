@@ -4,6 +4,7 @@
 .vagrant
 cloudformation/awskeys.json
 cloudformation/*.template
+cloudformation/keyparams.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

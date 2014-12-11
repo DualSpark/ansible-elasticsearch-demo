@@ -146,7 +146,7 @@ index.number_of_replicas: {{ index_number_of_replicas | default(1) }}
 
 # Path to directory where to store index data allocated for this node.
 #
-#path.data: /path/to/data
+path.data: {{ elasticsearch_path_data | default ('/mnt') }}
 #
 # Can optionally include more than one location, causing data to be striped across
 # the locations (a la RAID 0) on a file level, favouring locations with most free
@@ -334,6 +334,12 @@ discovery.zen.ping.multicast.enabled: {{ discovery_zen_ping_multicast_enabled | 
 #
 # See <http://elasticsearch.org/tutorials/elasticsearch-on-ec2/>
 # for a step-by-step tutorial.
+
+discovery:
+	type: ec2
+	ec2:
+		tag:
+			{{ elasticsearch_cluster_tag_name | default('InstanceRole') }}: {{ elasticsearch_cluster_tag_value }}
 
 # GCE discovery allows to use Google Compute Engine API in order to perform discovery.
 #

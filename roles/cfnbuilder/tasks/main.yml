@@ -18,3 +18,18 @@
 
 - name: upload template to s3_bucket
   shell: creates=/vagrant/cloudformation/upload.log aws s3 cp /vagrant/cloudformation/{{ cf_template_name | default('elkenvironment.debug.template') }} s3://{{ s3_bucket }}/{{ cf_template_name | default('elkenvironment.debug.template') }} --region {{ aws_region }} > /vagrant/cloudformation/upload.log
+
+- name: deploy cloudformation to AWS
+  cloudformation: 
+    stack_name: "ansible-elk-cloudformation"
+    state: "present"
+    region: "{{ aws_region | default('us-west-2') }}"
+    template: /vagrant/cloudformation/{{ cf_template_name | default('elkenvironment.debug.template') }}
+    template_parameters:
+      bastionEc2Key: {{ bastion_key_type | default('bastionInstanceKey') }}
+      bastionInstanceType: {{ bastion_instance_type | default('t1.micro') }}
+      ec2Key: {{ ec2_key_name | default('demoInstanceKey')}}
+      elasticsearchClusterName: {{ elasticsearch_cluster_name | default('ElkDemo') }}
+      logstasnIndexerMaxClusterSize: {{ logstash_indexer_max_cluster_size | default('4') }}
+      natInstanceType: {{ nat_instance_type | default('m1.small') }}
+      remoteAccessLocation: {{ remoteAccessLocation | default('0.0.0.0/0' )}}

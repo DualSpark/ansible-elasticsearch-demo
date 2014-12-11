@@ -160,6 +160,7 @@ class DevDeploy(NetworkBase):
 
         ec2_key = self.template.add_parameter(Parameter('bastionEc2Key', 
             Type='String', 
+            Default=bastion_conf.get('bastion_key_default', 'bastionEc2Key'),
             Description='EC2 key to use when deploying the bastion instance'))
 
         bastion_asg = self.create_asg('bastionASG',

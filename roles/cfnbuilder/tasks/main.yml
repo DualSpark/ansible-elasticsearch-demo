@@ -1,5 +1,5 @@
 ---
 - name: install cloudformation build dependencies
-  shell: pip install -r /vagrant/cloudformation/requirements.txt
+  shell: /usr/bin/pip install -r /vagrant/cloudformation/requirements.txt
 
 

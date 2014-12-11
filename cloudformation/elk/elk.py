@@ -47,17 +47,14 @@ class Elk(TemplateBase):
                 security_groups['kibana']['elb'], 
                 logging_queue, 
                 self.utility_bucket, 
-                es_layer['elb'], 
                 arg_dict.get('elk', {}))
 
         indexer_layer = self.add_indexer_layer(security_groups['logstash']['instance'], 
                 logging_queue,
-                es_layer['elb'],
                 arg_dict.get('elk', {}))
 
         scheduler_layer = self.add_scheduler_layer(security_groups['scheduler']['instance'], 
                 es_layer['elb'], 
-                self.utility_bucket,
                 arg_dict.get('elk', {}))
 
         log_shipper_policies = [iam.Policy(
@@ -90,16 +87,8 @@ class Elk(TemplateBase):
                 Value=Ref('AWS::Region'), 
                 Description='Region where the log shipping queue is deployed to use when configuring external log shippers'))
 
-        self.register_elb_to_dns(kibana_layer['elb'], 'kibana', arg_dict.get('elk', {}))
-
     def add_security_groups(self, elk_args):
         security_groups = {'elasticsearch':{}, 'kibana':{}, 'logstash':{}, 'scheduler':{}}
-        if 'bastionSecurityGroup' in self.template.resources:
-            bastion_host_security_group = self.tempalate.resources['bastionSecurityGroup']
-        else: 
-            bastion_host_security_group = self.template.add_parameter(Parameter('bastionSecurityGroup', 
-                Description='ID of the Bastion Host security group.', 
-                Type='String'))
 
         #allow SSH in from the virtual private network only
         common_ingress_rules = [
@@ -138,9 +127,6 @@ class Elk(TemplateBase):
             GroupDescription='Security group allows ingress to Elasticsearch ELB to manage backup snapshots and other scheduled tasks as needed', 
             VpcId=Ref(self.vpc_id)))
 
-        if bastion_host_security_group != None:
-            self.create_reciprocal_sg(bastion_host_security_group, 'bastion', security_groups['elasticsearch']['elb'], 'elasticsearchElb', elk_args.get('elk_http_port', '9200'))
-        
         self.create_reciprocal_sg(security_groups['kibana']['elb'], 'kibanaElb', security_groups['kibana']['instance'], 'kibanaInstance', elk_args.get('kibana_port', '80'), elk_args.get('kibana_healthcheck_port', '81'))    
         self.create_reciprocal_sg(security_groups['elasticsearch']['elb'], 'elasticsearchElb', security_groups['elasticsearch']['instance'], 'elasticsearchInstance', elk_args.get('elk_http_port', '9200'))
         self.create_reciprocal_sg(security_groups['kibana']['instance'], 'kibanaInstance', security_groups['elasticsearch']['elb'], 'elasticsearchElb', elk_args.get('elk_http_port', '9200'))
@@ -152,7 +138,6 @@ class Elk(TemplateBase):
     def add_indexer_layer(self, 
             instance_sg,
             logging_queue, 
-            elasticsearch_elb,
             indexer_args):
         '''
         Method encapsulates process of creating the resources required for the Logstash indexer layer
@@ -166,21 +151,16 @@ class Elk(TemplateBase):
         @configarg high_queue_depth_threshold [int] threshold in terms of the number of messages in the logging queue where the Auto Scaling group will scale up 
         @configarg logstash_install_deb_url_default [string] http path to set as the default value for the logstashIndexerInstallDeb CloudFormation property
         '''
-        logstash_deb_package = self.template.add_parameter(Parameter('logstashIndexerInstallDeb', 
-                Type='String', 
-                Default=indexer_args.get('indexer_deb_url','https://s3-us-west-2.amazonaws.com/dualspark-binary-cache/elk/logstash_1.4.2-1-2c0f5a1_all.deb'), 
-                Description='Location from which to download the Logstash debian package for installation on the indexer layer'))
-
-        if int(indexer_args.get('min_size', 1)) > int(indexer_args.get('max_size', 20)):
-            raise RuntimeError('Cannot assign a value for indexer_min_size that is larger than indexer_max_size. Values were set to min of ' + str(indexer_args.get('indexer_min_size', 1)) + ' and a max of ' + str(indexer_args.get('indexer_max_size', 20)) + '.')
+        if int(indexer_args.get('min_size', 1)) > int(indexer_args.get('max_size', 4)):
+            raise RuntimeError('Cannot assign a value for indexer_min_size that is larger than indexer_max_size. Values were set to min of ' + str(indexer_args.get('indexer_min_size', 1)) + ' and a max of ' + str(indexer_args.get('indexer_max_size', 4)) + '.')
 
         logstash_max_cluster_size = self.template.add_parameter(Parameter('logstashIndexerMaxClusterSize', 
                 Type='Number', 
                 MinValue=int(indexer_args.get('indexer_min_size', 1)), 
-                MaxValue=int(indexer_args.get('indexer_max_size', 20)), 
-                Default=str(indexer_args.get('_indexermax_size', 20)),
+                MaxValue=int(indexer_args.get('indexer_max_size', 4)), 
+                Default=str(indexer_args.get('_indexermax_size', 4)),
                 Description='Maximum size the indexer cluster will scale up to', 
-                ConstraintDescription='Logstash indexer size must be at least ' + str(indexer_args.get('indexer_min_size', 20)) + ' and no larger than ' + str(indexer_args.get('indexer_max_size', 20))))
+                ConstraintDescription='Logstash indexer size must be at least ' + str(indexer_args.get('indexer_min_size', 4)) + ' and no larger than ' + str(indexer_args.get('indexer_max_size', 4))))
 
         indexer_policies = [iam.Policy(
                             PolicyName='cloudformationRead', 
@@ -202,27 +182,12 @@ class Elk(TemplateBase):
                                         "Action": ["sqs:*"], 
                                         "Resource": GetAtt(logging_queue, 'Arn')}]})]
         
-        filter_file_addresses = self.template.add_parameter(Parameter('logstashIndexerGrokFiles', 
-                Type='String', 
-                Default=indexer_args.get('indexer_grok_address_default', 'https://s3-us-west-2.amazonaws.com/pmdevops/demo/elasticsearch/demogrok.txt'), 
-                Description='Comma separated collection of URLs to use to get grok patterns for Logstash parsing of log messgaes'))
-        
-        indexer_vars = []
-        indexer_vars.append(Join('=', ['LOGGING_QUEUE_NAME', GetAtt(logging_queue, 'QueueName')]))
-        indexer_vars.append(Join('=', ['LOGGING_QUEUE_REGION', Ref('AWS::Region')]))
-        indexer_vars.append(Join('=', ['ELASTICSEARCH_ELB_DNS_NAME', GetAtt(elasticsearch_elb, 'DNSName')]))
-        indexer_vars.append(Join('=', ['ELASTICSEARCH_PORT', indexer_args.get('elasticsearch_port', '9200')]))
-        indexer_vars.append(Join('=', ['INDEXER_OUTPUT_FLUSH_SIZE', indexer_args.get('indexer_output_flush_size', '500')]))
-        indexer_vars.append(Join('=', ['LOGGING_QUEUE_THREADS', indexer_args.get('indexer_queue_threds', '40')]))
-
         iam_profile = self.create_instance_profile('logstashIndexer', indexer_policies)
-        bootstrap_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'logstash.bootstrap.sh')
 
         indexer_asg = self.create_asg('logstashIndexer', 
                 instance_profile=iam_profile, 
                 ami_name='ubuntuElkLogstash',
                 instance_type=indexer_args.get('indexer_instance_type_default', 'c3.large'),
-                user_data=self.build_bootstrap([bootstrap_file], indexer_vars), 
                 security_groups=[instance_sg, self.common_security_group], 
                 min_size=int(indexer_args.get('indexer_min_size',1)), 
                 max_size=Ref(logstash_max_cluster_size), 
@@ -267,7 +232,6 @@ class Elk(TemplateBase):
     def add_scheduler_layer(self, 
             instance_sg, 
             elasticsearch_elb, 
-            utility_bucket, 
             scheduler_args):
         '''
         Method creates a single scheduler instance that manages running api-driven tasks via HTTP for Elasticsearch on a scheduler
@@ -277,51 +241,9 @@ class Elk(TemplateBase):
         ''' 
         iam_profile = self.create_instance_profile('scheduler')
 
-        es_snapshot_name = self.template.add_parameter(Parameter('elasticsearchSnapshotName', 
-                Default='ElasticsearchBackup', 
-                Type='String', 
-                MinLength=4, 
-                MaxLength=32, 
-                Description='Name to use when creating the Elasticsearch snapshot for backups',
-                ConstraintDescription='must be at least 4 characters and no more than 32.'))
-
-        snapshot_key_name_prefix = self.template.add_parameter(Parameter('elasticsearchSnapshotKeyNamePrefix', 
-                Default='backup/elasticsearch', 
-                Type='String', 
-                MinLength=2, 
-                MaxLength=128, 
-                Description='S3 Key name prefix to apply to the Elasticsearch snapshot', 
-                ConstraintDescription='must be at least 2 characters and no more than 128.'))
-
-        snapsoht_frequency = self.template.add_parameter(Parameter('elasticsearchSnapshotFrequency' ,
-                Default='60', 
-                Type='Number', 
-                MinValue=5, 
-                MaxValue=60, 
-                Description='Interval in minutes to run the elasticsearch snapshot process', 
-                ConstraintDescription='must be at least 5 and no more than 60.'))
-
-        scheduler_vars = []
-        scheduler_vars.append(Join('=', ['ELASTICSEARCH_ELB_DNS_NAME', GetAtt(elasticsearch_elb, 'DNSName')]))
-        scheduler_vars.append(Join('=', ['BACKUP_REPO_NAME', Ref(es_snapshot_name)]))
-        scheduler_vars.append(Join('=', ['BUCKET_NAME', Ref(utility_bucket)]))
-        scheduler_vars.append(Join('=', ['BUCKET_REGION', Ref('AWS::Region')]))
-        scheduler_vars.append(Join('=', ['KEY_NAME_PREFIX', Ref(snapshot_key_name_prefix)]))
-        snapshot_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'elasticsearch.snapshot.py')
-
-        scheduler_extra = []
-        scheduler_extra.append('cat > /opt/elk_scheduler/elasticsearch.snapshot.py << EOF')
-        for line in self.get_file_contents(snapshot_file):
-            scheduler_extra.append(line)
-        scheduler_extra.append('EOF')
-        scheduler_extra.append('chmod +x /opt/elk_scheduler/elasticsearch.snapshot.py')
-        scheduler_extra.append(Join('', ['echo "*/', Ref(snapsoht_frequency), ' * * * * root python /opt/elk_scheduler/elasticsearch.snapshot.py create $ELASTICSEARCH_ELB_DNS_NAME --repo_name $BACKUP_REPO_NAME --bucket_name $BUCKET_NAME --bucket_region $BUCKET_REGION --key_name_prefix $KEY_NAME_PREFIX" >> /etc/crontab']))
-        bootstrap_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'scheduler.bootstrap.sh')
-
         scheduler_asg = self.create_asg('scheduler', 
             instance_profile=iam_profile, 
             instance_type=scheduler_args.get('scheduler_instance_type_default', 't1.micro'),
-            user_data=self.build_bootstrap([bootstrap_file], scheduler_vars, scheduler_extra), 
             security_groups=[instance_sg, self.common_security_group], 
             min_size=1, 
             max_size=1, 
@@ -333,7 +255,6 @@ class Elk(TemplateBase):
             elb_sg,
             logging_queue,
             backup_bucket,
-            elasticsearch_elb, 
             kibana_args):
         '''
         Method handles creation of the kibana layer which will surface the kibana front end as well as a proxy directly to Elasticsearch behind a password-protected web server
@@ -347,26 +268,6 @@ class Elk(TemplateBase):
         @configarg kibana_min_size [int] minimum number of instances to be deployed for the Kibana Auto Scaling group
         @configarg kibana_max_size [int] maximum number of instances to be deployed for the Kibana Auto Scaling group
         '''
-        kibana_download_package = self.template.add_parameter(Parameter('kibanaInstallTgz', 
-                Default=kibana_args.get('kibana_install_tgz_url','https://s3-us-west-2.amazonaws.com/dualspark-binary-cache/elk/kibana-3.1.0.tar.gz'),  
-                Type='String',
-                Description='Address from which to download the Kibana tgz file to unpack and install'))
-
-        kibana_password = self.template.add_parameter(Parameter('kibanaAccessPassword',  
-                Type='String',
-                Default='P@ssword!', 
-                Description='Password to use when accessing the front end of Kibana',
-                NoEcho=True, 
-                MinLength=4, 
-                MaxLength=20, 
-                ConstraintDescription='Password must be at least 4 characters and no more than 20.'))
-
-        kibana_vars = []
-        kibana_vars.append(Join('=', ['KIBANA_PASSWORD', Ref(kibana_password)]))
-        kibana_vars.append(Join('=', ['KIBANA_URL', Ref(kibana_download_package)]))
-        kibana_vars.append(Join('=', ['ELASTICSEARCH_ELB_DNS_NAME', GetAtt(elasticsearch_elb, 'DNSName')]))
-        kibana_vars.append(Join('=', ['ELASTICSEARCH_BACKUP_BUCKET', Ref(backup_bucket)]))
-
         kibana_elb = self.template.add_resource(elb.LoadBalancer('kibanaExternalElb', 
                 Subnets=self.subnets['public'], 
                 SecurityGroups=[Ref(elb_sg)], 
@@ -410,12 +311,10 @@ class Elk(TemplateBase):
                                     "Resource" : "arn:aws:s3:::*"}]})]
 
         iam_profile = self.create_instance_profile('kibana', kibana_policies)
-        bootstrap_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'kibana.bootstrap.sh')
 
         kibana_asg = self.create_asg('kibana', 
                 instance_profile=iam_profile, 
                 instance_type=kibana_args.get('kibana_instance_type_default', 't1.micro'),
-                user_data=self.build_bootstrap([bootstrap_file], kibana_vars), 
                 security_groups=[instance_sg, self.common_security_group], 
                 min_size=kibana_args.get('kibana_min_size', 1), 
                 max_size=kibana_args.get('kibana_max_size', 4), 
@@ -423,10 +322,6 @@ class Elk(TemplateBase):
                 instance_monitoring=True, 
                 load_balancer=kibana_elb, 
                 include_ephemerals=False)
-
-        self.template.add_output(Output('elasticsearchHQDashboard', 
-                Value=Join('', ['http://', GetAtt(kibana_elb, 'DNSName'), '/elasticsearch/_plugin/HQ/index.html']), 
-                Description='Direct url to Elasticsearch HQ plugin (if installed) to show cluster health information via the ElasticsearchHQ project.'))
 
         self.template.add_output(Output('kibanaDashboard', 
                 Value=Join('', ['http://', GetAtt(kibana_elb, 'DNSName'), '/index.html']), 
@@ -455,16 +350,6 @@ class Elk(TemplateBase):
         @configarg instance_type_default [string] valid EC2 instance type with 2 or more ephemeral drives available
         @configarg default_plugins [string] list of Elasticsearch plugins to set as the default when generating this template
         '''
-        es_plugins = self.template.add_parameter(Parameter('elasticsearchPlugins',  
-                Type='String',
-                Default=es_config.get('elasticsearch_default_plugins', 'elasticsearch/elasticsearch-cloud-aws/2.1.1,royrusso/elasticsearch-HQ'), 
-                Description='Comma separated list of Elasticsearch plugins to install. Note that cloud-aws is reqired for AWS cluster discovery'))
-        
-        es_deb_package = self.template.add_parameter(Parameter('elasticsearchInstallDeb',  
-                Type='String',
-                Default=es_config.get('elasticsearch_install_deb_url','https://s3-us-west-2.amazonaws.com/dualspark-binary-cache/elk/elasticsearch-1.3.2.deb'),
-                Description='Address from which to download the Elasticsearch debian package for installing the service itself'))
-
         es_cluster_name = self.template.add_parameter(Parameter('elasticsearchClusterName', 
                 Default=es_config.get('elasticsearch_cluster_name', 'ElkDemo'),  
                 Type='String',
@@ -504,13 +389,6 @@ class Elk(TemplateBase):
 
         iam_profile = self.create_instance_profile('elasticsearch', es_policies)
 
-        es_vars = []
-        es_vars.append(Join('=', ['ES_DOWNLOAD', Ref(es_deb_package)]))
-        es_vars.append(Join('=', ['ES_PLUGINS', Ref(es_plugins)]))
-        es_vars.append(Join('=', ['ES_CLUSTER_NAME', Ref(es_cluster_name)]))
-        es_vars.append(Join('=', ['ES_TAG_NAME', es_config.get('elasticsearch_discovery_tag_name','InstanceRole')]))
-        es_vars.append(Join('=', ['ES_TAG_VALUE', es_config.get('elasticsearch_discovery_tag_value','Elasticsearch')]))
-
         es_elb = self.template.add_resource(elb.LoadBalancer('elasticsearchInternalElb', 
                 Subnets=self.subnets['private'], 
                 SecurityGroups=[Ref(elb_sg)], 
@@ -532,18 +410,17 @@ class Elk(TemplateBase):
                 Scheme='internal'))
 
         es_tags = [autoscaling.Tag(es_config.get('elasticsearch_discovery_tag_name','InstanceRole'), es_config.get('elasticsearch_discovery_tag_value','Elasticsearch'), True)]
-        bootstrap_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'elasticsearch.bootstrap.sh')
 
-        #                ebs_data_volumes=[{'size':'200', 'type': 'gp2', 'delete_on_termination': False},{'size':'200', 'type': 'gp2', 'delete_on_termination': False},{'size':'200', 'type': 'gp2', 'delete_on_termination': False}],
+        ebs_data_volumes = [{'size':'20', 'type': 'gp2', 'delete_on_termination': False},{'size':'20', 'type': 'gp2', 'delete_on_termination': False},{'size':'20', 'type': 'gp2', 'delete_on_termination': False}]
 
         es_asg = self.create_asg('elasticsearch', 
                 instance_profile=iam_profile, 
                 instance_type=es_config.get('elasticsearch_instance_type_default', 'c3.large'),
-                user_data=self.build_bootstrap([bootstrap_file], es_vars), 
                 security_groups=[instance_sg, self.common_security_group], 
                 min_size=str(es_config.get('elasticsearch_cluster_size_default', 5)), 
                 max_size=str(es_config.get('elasticsearch_cluster_size_default', 5)), 
                 root_volume_type=es_config.get('root_volume_type', 'gp2'),
+                ebs_data_volumes=ebs_data_volumes,
                 instance_monitoring=True, 
                 custom_tags=es_tags, 
                 load_balancer=es_elb)

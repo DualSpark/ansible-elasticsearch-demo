@@ -1,5 +1,9 @@
 # project-specific config file for AWS
 .boto.cfg
+.tower.license
+.vagrant
+cloudformation/awskeys.json
+cloudformation/*.template
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -55,3 +59,6 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Other Random Stuff
+.DS_Store

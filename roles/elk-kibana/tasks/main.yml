@@ -9,7 +9,8 @@
   apt: pkg=default-jre-headless state=present update_cache=yes
 
 - name: create htpasswd file
-  htpasswd: path=/opt/kibana.htpasswd name=admin password={{ kibana_password }} owner=root group=www-data mode=0640
+  htpasswd: path={{ kibana_htpasswd_path | default('/opt/kibana.htpasswd') }} name=admin password={{ kibana_password }} owner=root group=www-data mode=0640
 
 - name: install Nginx from apt
   apt: name=nginx state=latest update_cache=yes
+

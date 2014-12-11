@@ -45,13 +45,12 @@ class DevDeploy(NetworkBase):
         @param arg_dict [dict] collection of keyword arguments for this class implementation
         '''
         NetworkBase.__init__(self, arg_dict)
-
         elk_tier = Elk(arg_dict)
-
+        elk_tier = self.add_child_template('elk', elk_tier)
+        self.add_ha_bastion_instance(elk_tier, arg_dict.get('bastion', {}))
 
     def add_ha_bastion_instance(self, 
-            puppet_dns_name,
-            environment_name,
+            elk_tier,
             bastion_conf):
         '''
         Creates an HA bastion instance
@@ -122,21 +121,7 @@ class DevDeploy(NetworkBase):
                         InstancePort=bastion_conf.get('ssh_port', '22'), 
                         Protocol=bastion_conf.get('elb_protocol', 'tcp').upper())]))
 
-        if 'logShipperQueueName' in self.template.parameters:
-            log_queue = self.template.parameters['logShipperQueueName']
-        else:
-            log_queue = self.template.add_parameter(Parameter('logShipperQueueName', 
-                Type='String', 
-                Description='Name of the SQS queue used for logging'))
-
-        if 'logShipperQueueRegion' in self.template.parameters:
-            log_region = self.template.parameters['logShipperQueueRegion']
-        else:
-            log_region = self.template.add_parameter(Parameter('logShipperQueueRegion', 
-                Type='String', 
-                Description='Region of the SQS queue used for logging'))
-
-        log_queue_arn = Join('', ['arn:aws:sqs:', Ref(log_region) ,':', Ref('AWS::AccountId'),':', Ref(log_queue)])
+        log_queue_arn = Join('', ['arn:aws:sqs:', GetAtt(elk_tier, 'Outputs.logShipperQueueRegion') ,':', Ref('AWS::AccountId'),':', GetAtt(elk_tier, 'Outputs.logShipperQueueName')])
 
         iam_policies = [iam.Policy(
                             PolicyName='logQueueWrite', 
@@ -162,13 +147,18 @@ class DevDeploy(NetworkBase):
 
         iam_profile = self.create_instance_profile('bastion', iam_policies)
 
+        ec2_key = self.template.add_parameter(Parameter('bastionEc2Key', 
+            Type='String', 
+            Description='EC2 key to use when deploying the bastion instance'))
+
         bastion_asg = self.create_asg('bastionASG',
                 instance_profile=iam_profile,
-                ami_name="ubuntuPuppet",
+                ami_name="ubuntu1404LtsAmiId",
                 instance_type=instance_type,
                 security_groups=[bastion_security_group], 
                 min_size=1, 
                 max_size=1, 
+                ec2_key=Ref(ec2_key),
                 load_balancer={'public': bastion_elb},
                 include_ephemerals=False,
                 instance_monitoring=bastion_conf.get('instance_monitoring', False))
@@ -186,5 +176,5 @@ if __name__ == '__main__':
     if arguments.get('--debug', False):
         print test.to_json()
 
-    with open(arguments.get('--output_file', 'devdeploy.debug.template'), 'w') as text_file:
+    with open(arguments.get('--output_file', 'elkenvironment.debug.template'), 'w') as text_file:
         text_file.write(test.to_json())

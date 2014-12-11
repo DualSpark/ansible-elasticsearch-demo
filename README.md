@@ -4,8 +4,16 @@ Ansible, AWS and Elasticsearch demo
 ## Prerequisites
 
 The following must be installed prior to using this demo:
+
 * [Vagrant](https://www.vagrantup.com/downloads.html) - tested with v1.6.5
 * [Virtualbox](https://www.virtualbox.org/wiki/Downloads) - tested with v4.3.20-96996
+
+### Helpful configurations
+
+There are a few very useful Vagrant plugins that might make your life a little easier: 
+
+* [Landrush](https://github.com/phinze/landrush)
+* [Vagrant-pristine](https://github.com/fgrehm/vagrant-pristine)
 
 ## Configuration for the demo
 

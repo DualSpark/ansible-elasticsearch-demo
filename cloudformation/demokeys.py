@@ -3,14 +3,13 @@
 demokeys.py
 
 Usage: 
-    demokeys.py create [--aws_region <AWS_REGION>] [--param_file <PARAM_FILE>] [--key_file <KEY_FILE>]
+    demokeys.py create <EC2_KEY> <BASTION_KEY> [--aws_region <AWS_REGION>] [--key_file <KEY_FILE>]
     demokeys.py cleanup [--aws_region <AWS_REGION>] [--key_file <KEY_FILE>] [--delete_files]
 
 Options: 
   -h --help                  Show this screen.
   -v --version               Show version.
   --key_file <KEY_FILE>      path to save the output [Default: awskeys.json]
-  --param_file <PARAM_FILE>  path to save the output for the paramter mappings in cloudformation [Default: keyparams.json]
   --aws_region <AWS_REGION>  AWS region to generate keys for [Default: us-west-2]
   --delete_files             Indicates that files should be deleted once cleanup process is completed
 
@@ -38,16 +37,8 @@ if arguments['create']:
 
     keytypes = []
 
-    print '   Generating ec2 key names' 
-    for keytype in ['bastionEc2Key', 'ec2Key']:
-        unique_key = keytype + '-' + ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-        keytypes.append(unique_key)
-        key_parameters[keytype] = unique_key
-        print '     Key name for ' + keytype + ' set to ' + unique_key
-    print ''
-
     print '   Creating EC2 keys in ' + arguments['--aws_region']
-    for keytype in keytypes:
+    for keytype in [arguments['<EC2_KEY>'], arguments['<BASTION_KEY>']]:
         keypair = conn.create_key_pair(key_name=keytype)
         keys[keytype] = keypair.material
         print '    ' + keytype + ' created'
@@ -56,10 +47,6 @@ if arguments['create']:
     with open(arguments['--key_file'], 'w') as key_file:
         print '   Writing key file with private keys to ' + arguments['--key_file']
         key_file.write(json.dumps(keys))
-
-    with open(arguments['--param_file'], 'w') as param_file:
-        print '   Writing CloudFormation parameter file to ' + arguments['--param_file']
-        param_file.write(json.dumps(key_parameters))
 
     print ''
     print 'Key creation process complete'

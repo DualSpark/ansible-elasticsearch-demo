@@ -1,7 +1,7 @@
 #!/usr/bin/env python
-'''Base Environment Generator 
+'''Elasticsearch Snapshot Manager 
 
-This class and command line tool is intended to simplify creating consistent networks from region to region with a good ability to configure a number of pertinent configuration-level options.  
+This command line utility simplifies the process of creating and restoring snapshots for Elasticsearch to and from S3.
 
 Usage:
     elasticsearch.snapshot.py (-h | --help)

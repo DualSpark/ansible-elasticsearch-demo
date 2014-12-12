@@ -14,3 +14,8 @@
 - name: install Nginx from apt
   apt: name=nginx state=latest update_cache=yes
 
+- name: Configure Kibana in Nginx
+  template: src=kibana.nginx.j2 dest=/etc/nginx/nginx.conf group=www-data mode=0644
+  notify:
+    - Restart Nginx
+

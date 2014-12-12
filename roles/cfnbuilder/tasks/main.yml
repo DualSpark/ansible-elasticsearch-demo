@@ -11,7 +11,7 @@
   shell: /usr/bin/pip install -r /vagrant/cloudformation/requirements.txt
 
 - name: create AWS EC2 Keys
-  shell: chdir=/vagrant/cloudformation python demokeys.py create --region {{ aws_region }} creates=/vagrant/cloudformation/keyparams.json
+  shell: chdir=/vagrant/cloudformation python demokeys.py create {{ ec2_key_name | default('ec2InstanceKey') }} {{ bastion_key_name | default('bastionInstanceKey') }} --aws_region {{ aws_region }} creates=/vagrant/cloudformation/keyparams.json
 
 - name: generate cloudformation template
   shell: chdir=/vagrant/cloudformation creates=/vagrant/cloudformation/{{ cf_template_name | default('elkenvironment.debug.template') }} python cfgenerator.py build local_dev_args.json --aws_region {{ aws_region }} --s3_bucket {{ s3_bucket }} --output_file {{ cf_template_name | default('elkenvironment.debug.template') }}
@@ -26,10 +26,11 @@
     region: "{{ aws_region | default('us-west-2') }}"
     template: "/vagrant/cloudformation/{{ cf_template_name | default('elkenvironment.debug.template') }}"
     template_parameters:
-      bastionEc2Key: "{{ bastion_key_type | default('bastionInstanceKey') }}"
+      bastionEc2Key: "{{ bastion_key_name | default('bastionInstanceKey') }}"
       bastionInstanceType: "{{ bastion_instance_type | default('t1.micro') }}"
       ec2Key: "{{ ec2_key_name | default('demoInstanceKey')}}"
       elasticsearchClusterName: "{{ elasticsearch_cluster_name | default('ElkDemo') }}"
-      logstasnIndexerMaxClusterSize: "{{ logstash_indexer_max_cluster_size | default('4') }}"
+      logstashIndexerMaxClusterSize: "{{ logstash_indexer_max_cluster_size | default('4') }}"
       natInstanceType: "{{ nat_instance_type | default('m1.small') }}"
       remoteAccessLocation: "{{ remoteAccessLocation | default('0.0.0.0/0' )}}"
+

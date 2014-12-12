@@ -320,7 +320,7 @@ class Elk(TemplateBase):
                 max_size=kibana_args.get('kibana_max_size', 4), 
                 root_volume_type=kibana_args.get('root_volume_type', 'gp2'),
                 instance_monitoring=True, 
-                load_balancer=kibana_elb, 
+                load_balancer=Ref(kibana_elb), 
                 include_ephemerals=False)
 
         self.template.add_output(Output('kibanaDashboard', 
@@ -423,7 +423,7 @@ class Elk(TemplateBase):
                 ebs_data_volumes=ebs_data_volumes,
                 instance_monitoring=True, 
                 custom_tags=es_tags, 
-                load_balancer=es_elb)
+                load_balancer=Ref(es_elb))
 
         return {'elb': es_elb, 'asg': es_asg}
 

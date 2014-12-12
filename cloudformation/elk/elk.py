@@ -186,7 +186,7 @@ class Elk(TemplateBase):
 
         indexer_asg = self.create_asg('logstashIndexer', 
                 instance_profile=iam_profile, 
-                ami_name='ubuntuElkLogstash',
+                ami_name='ubuntu1404LtsAmiId',
                 instance_type=indexer_args.get('indexer_instance_type_default', 'c3.large'),
                 security_groups=[instance_sg, self.common_security_group], 
                 min_size=int(indexer_args.get('indexer_min_size',1)), 
@@ -247,6 +247,7 @@ class Elk(TemplateBase):
             security_groups=[instance_sg, self.common_security_group], 
             min_size=1, 
             max_size=1, 
+            ami_name='ubuntu1404LtsAmiId',
             instance_monitoring=True, 
             root_volume_type=scheduler_args.get('root_volume_type', 'gp2'),
             include_ephemerals=False)
@@ -318,6 +319,7 @@ class Elk(TemplateBase):
                 security_groups=[instance_sg, self.common_security_group], 
                 min_size=kibana_args.get('kibana_min_size', 1), 
                 max_size=kibana_args.get('kibana_max_size', 4), 
+                ami_name='ubuntu1404LtsAmiId',
                 root_volume_type=kibana_args.get('root_volume_type', 'gp2'),
                 instance_monitoring=True, 
                 load_balancer=Ref(kibana_elb), 
@@ -415,6 +417,7 @@ class Elk(TemplateBase):
 
         es_asg = self.create_asg('elasticsearch', 
                 instance_profile=iam_profile, 
+                ami_name='ubuntu1404LtsAmiId',
                 instance_type=es_config.get('elasticsearch_instance_type_default', 'c3.large'),
                 security_groups=[instance_sg, self.common_security_group], 
                 min_size=str(es_config.get('elasticsearch_cluster_size_default', 5)), 

@@ -26,7 +26,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     tower.vm.provision 'shell', path: 'tower.configs.sh'
     tower.vm.provision 'ansible' do |ansible|
       ansible.playbook = 'tower.yml'
-      ansible.verbose = 'v'
+      ansible.verbose = 'vvvv'
       ansible.sudo = 'true'
       ansible.sudo_user = 'root'
       ansible.host_key_checking = 'false'

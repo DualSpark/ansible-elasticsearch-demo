@@ -3,8 +3,8 @@
 demokeys.py
 
 Usage: 
-    demokeys.py create <EC2_KEY> <BASTION_KEY> [--aws_region <AWS_REGION>] [--key_file <KEY_FILE>]
-    demokeys.py cleanup [--aws_region <AWS_REGION>] [--key_file <KEY_FILE>] [--delete_files]
+    demokeys.py create <EC2_KEY> <BASTION_KEY> [--aws_region <AWS_REGION>] [--key_file <KEY_FILE>] [--base_path <BASE_PATH>]
+    demokeys.py cleanup [--aws_region <AWS_REGION>] [--key_file <KEY_FILE>] [--base_path <BASE_PATH>] [--delete_files]
 
 Options: 
   -h --help                  Show this screen.
@@ -12,7 +12,7 @@ Options:
   --key_file <KEY_FILE>      path to save the output [Default: awskeys.json]
   --aws_region <AWS_REGION>  AWS region to generate keys for [Default: us-west-2]
   --delete_files             Indicates that files should be deleted once cleanup process is completed
-
+  --base_path <BASE_PATH>    Base where key files should be saved [Default: /etc/ansible]
 '''
 import boto.ec2
 import json
@@ -41,6 +41,9 @@ if arguments['create']:
     for keytype in [arguments['<EC2_KEY>'], arguments['<BASTION_KEY>']]:
         keypair = conn.create_key_pair(key_name=keytype)
         keys[keytype] = keypair.material
+        with open(arguments['--base_path'] + '/' + keytype + '.pem', 'w') as key_file: 
+            key_file.write(keypair.material)
+
         print '    ' + keytype + ' created'
     print ''
 
@@ -63,6 +66,7 @@ elif arguments['cleanup']:
         try:
             print '   ## Deleting key for ' + key
             conn.delete_key_pair(key_name=key)
+            os.remove(arguments['--base_path'] + '/' + keytype + key + '.pem')
             print '     ++ key deleted: ' + key
         except:
             print '     ** Key not found'

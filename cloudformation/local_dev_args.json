@@ -33,6 +33,6 @@
     "nat_instance_type": "m1.small"
   },
   "bastion": {
-    "instance_type_default": "t1.micro"
+    "instance_type_default": "m1.small"
   }
 }

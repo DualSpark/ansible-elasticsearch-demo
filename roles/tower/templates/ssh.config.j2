@@ -1,0 +1,18 @@
+Host bastion
+    User                   {{ bastion_user | default('ubuntu') }}
+    HostName               {{ bastion_port | default('2222') }}
+    ProxyCommand           none
+    Port                   2222
+    IdentityFile           {{ bastion_key_name | default('bastionInstanceKey') }}.pem
+    BatchMode              yes
+    PasswordAuthentication no
+
+Host *
+    ServerAliveInterval    60
+    TCPKeepAlive           yes
+    ProxyCommand           ssh -q -A {{ instance_user | default('ubuntu') }}@###.###.###.### nc %h %p
+    ControlMaster          auto
+    ControlPath            ~/.ssh/mux-%r@%h:%p
+    ControlPersist         8h
+    User                   ansible
+    IdentityFile           {{ ec2_key_name | default('ec2InstanceKey') }}.pem

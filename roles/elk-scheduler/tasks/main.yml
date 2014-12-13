@@ -1,0 +1,19 @@
+---
+- name: Install required packages
+  apt: pkg={{ item }} state=present update_cache=yes
+  with_items:
+    - python-dev
+    - python-pip
+
+- name: Install required python packages
+  shell: pip install {{ item }}
+  with_items: 
+  	- docopt
+
+- name: Deploy Elasticsearch snapshot script
+  copy: src=elasticsearch.snapshot.py dest=/usr/bin/{{ snapshot_command_name | default('esSnapshot') }} mode=744 owner=root group=root
+
+- name: Create Elasticsearch Repository
+
+- name: Create cron job
+  cron: name="Elasticsearch Snapshot cron job" user=root minute="*/{{ snapshot_frequency | default('30') }}" job="{{ snapshot_command_name | default('esSnapshot') }} {{ es_elb_endpoint }} --repo_name {{ es_snapshot_repo_name }}"

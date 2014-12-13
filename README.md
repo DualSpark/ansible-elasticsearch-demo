@@ -36,6 +36,15 @@ AWS Credentials are used for a handful of things in this demo:
   * Note: this will deploy EC2 and other resources and may incur a cost to your account.
 * Finally, It's used by Ansible Tower to generate a dynamic inventory
 
+As a reminder, the boto.cfg format is:
+
+```
+[Credentials]
+aws_access_key_id = AWS_ACCESS_KEY
+aws_secret_access_key = AWS_SECRET_ACCESS_KEY
+
+```
+
 ## Resources deployed via CloudFormation
 
 You will also need AWS credentials to deploy a set of CloudFormation scripts which will crate an Elasticsearch deployment:
@@ -64,7 +73,6 @@ vagrant up tower
 If you have the Landrush Vagrant plugin installed:
 
 ```https://tower.vagrant.dev```
-
 
 Otherwise, you can use the IP address directly: 
 

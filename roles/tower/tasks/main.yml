@@ -1,6 +1,6 @@
 ---
 - name: install EPEL repo
-  yum: name=http://fedora.mirrors.pair.com/epel/7/x86_64/e/epel-release-7-2.noarch.rpm state=present
+  yum: name=http://fedora.mirrors.pair.com/epel/7/x86_64/e/epel-release-7-5.noarch.rpm state=present
 
 - name: yum update all the things
   yum: name=* state=latest
@@ -35,3 +35,12 @@
 
 - name: install tower cli
   shell: pip install ansible-tower-cli
+
+- name: put tower cli config in place
+  copy: src=tower_cli.cfg dest=/{{configdir}}
+
+- name: put tower cli group file in tmp
+  copy: src=tower_group.cfg dest=/tmp/tower_group.cfg
+
+- name: run tower config and update
+  command: chdir=/vagrant/cloudformation creates=/etc/ansible/towerconf.log python towerconfig.py >> /etc/ansible/towerconf.log

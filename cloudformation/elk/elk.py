@@ -42,20 +42,20 @@ class Elk(TemplateBase):
                 self.utility_bucket, 
                 arg_dict.get('elk', {}))
 
-        kibana_layer = self.add_kibana_layer(
-                security_groups['kibana']['instance'], 
-                security_groups['kibana']['elb'], 
-                logging_queue, 
-                self.utility_bucket, 
-                arg_dict.get('elk', {}))
+        #kibana_layer = self.add_kibana_layer(
+        #        security_groups['kibana']['instance'], 
+        #        security_groups['kibana']['elb'], 
+        #        logging_queue, 
+        #        self.utility_bucket, 
+        #        arg_dict.get('elk', {}))
 
-        indexer_layer = self.add_indexer_layer(security_groups['logstash']['instance'], 
-                logging_queue,
-                arg_dict.get('elk', {}))
+        #indexer_layer = self.add_indexer_layer(security_groups['logstash']['instance'], 
+        #        logging_queue,
+        #        arg_dict.get('elk', {}))
 
-        scheduler_layer = self.add_scheduler_layer(security_groups['scheduler']['instance'], 
-                es_layer['elb'], 
-                arg_dict.get('elk', {}))
+        #scheduler_layer = self.add_scheduler_layer(security_groups['scheduler']['instance'], 
+        #        es_layer['elb'], 
+        #        arg_dict.get('elk', {}))
 
         log_shipper_policies = [iam.Policy(
                             PolicyName='sqsWrite', 
@@ -243,7 +243,7 @@ class Elk(TemplateBase):
 
         scheduler_asg = self.create_asg('scheduler', 
             instance_profile=iam_profile, 
-            instance_type=scheduler_args.get('scheduler_instance_type_default', 't1.micro'),
+            instance_type=scheduler_args.get('scheduler_instance_type_default', 'm1.small'),
             security_groups=[instance_sg, self.common_security_group], 
             min_size=1, 
             max_size=1, 

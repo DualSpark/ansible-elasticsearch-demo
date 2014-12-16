@@ -41,6 +41,7 @@
       bastionEc2Key: "{{ bastion_key_name | default('bastionInstanceKey') }}"
       bastionInstanceType: "{{ bastion_instance_type | default('t1.micro') }}"
       ec2Key: "{{ ec2_key_name | default('demoInstanceKey')}}"
+      elasticsearchClusterName: "{{ elasticsearch_cluster_name | default('ElkDemo') }}"
       natInstanceType: "{{ nat_instance_type | default('m1.small') }}"
       remoteAccessLocation: "{{ remoteAccessLocation | default('0.0.0.0/0' )}}"
   ignore_errors: True

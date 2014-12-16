@@ -42,20 +42,20 @@ class Elk(TemplateBase):
                 self.utility_bucket, 
                 arg_dict.get('elk', {}))
 
-        #kibana_layer = self.add_kibana_layer(
-        #        security_groups['kibana']['instance'], 
-        #        security_groups['kibana']['elb'], 
-        #        logging_queue, 
-        #        self.utility_bucket, 
-        #        arg_dict.get('elk', {}))
+        kibana_layer = self.add_kibana_layer(
+                security_groups['kibana']['instance'], 
+                security_groups['kibana']['elb'], 
+                logging_queue, 
+                self.utility_bucket, 
+                arg_dict.get('elk', {}))
 
-        #indexer_layer = self.add_indexer_layer(security_groups['logstash']['instance'], 
-        #        logging_queue,
-        #        arg_dict.get('elk', {}))
+        indexer_layer = self.add_indexer_layer(security_groups['logstash']['instance'], 
+                logging_queue,
+                arg_dict.get('elk', {}))
 
-        #scheduler_layer = self.add_scheduler_layer(security_groups['scheduler']['instance'], 
-        #        es_layer['elb'], 
-        #        arg_dict.get('elk', {}))
+        scheduler_layer = self.add_scheduler_layer(security_groups['scheduler']['instance'], 
+                es_layer['elb'], 
+                arg_dict.get('elk', {}))
 
         log_shipper_policies = [iam.Policy(
                             PolicyName='sqsWrite', 

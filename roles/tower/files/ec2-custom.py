@@ -582,16 +582,14 @@ class Ec2Inventory(object):
                     self.route53_records.setdefault(resource, set())
                     self.route53_records[resource].add(record_name)
 
-    def get_elb_records(self): 
+    def get_elb_records(self, region): 
         ''' Get and store the map of instance id to ELB resource name '''
 
-        elb_zones = [ zone for zone in all_zones if zone.name[:-1]
-                      not in self.elb_excluded_zones ]
         
         self.elb_records = {}
 
         for zone in elb_zones:
-            elb_conn = elb.connect_to_region()
+            elb_conn = elb.ElbConnection(region=region)
 
             for lb in elb_conn.get_all_load_balancers():
                 elb_name = lb.name

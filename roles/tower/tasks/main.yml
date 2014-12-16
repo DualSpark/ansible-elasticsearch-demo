@@ -15,8 +15,7 @@
   - ansible 
 
 - name: download Tower setup
-  get_url: url=http://releases.ansible.com/ansible-tower/setup/ansible-tower-setup-{{tower_version}}.tar.gz
-    dest=/opt/ force=yes
+  get_url: url=http://releases.ansible.com/ansible-tower/setup/ansible-tower-setup-{{tower_version}}.tar.gz dest=/opt/ force=yes
 
 - name: create extract folder
   file: dest=/opt/ansible-tower-setup mode=640 owner=root group=root state=directory
@@ -26,6 +25,7 @@
 
 - name: run the Tower installer
   command: chdir=/opt/ansible-tower-setup creates=/etc/awx/settings.py ./setup.sh
+  ignore_errors: True
 
 - name: create etc ansible directory
   action: file dest={{configdir}} state=directory
@@ -37,10 +37,13 @@
   shell: pip install ansible-tower-cli
 
 - name: put tower cli config in place
-  copy: src=tower_cli.cfg dest=/{{configdir}}
+  copy: src=tower_cli.cfg dest=/etc/awx/tower_cli.cfg
 
 - name: put tower cli group file in tmp
-  copy: src=tower_group.cfg dest=/tmp/tower_group.cfg
+  copy: src=tower_group.yml dest=/tmp/tower_group.yml
+
+- name: pull over tower config python script
+  copy: src=towerconfig.py dest=/tmp/towerconfig.py
 
 - name: run tower config and update
-  command: chdir=/vagrant/cloudformation creates=/etc/ansible/towerconf.log python towerconfig.py >> /etc/ansible/towerconf.log
+  command: chdir=/tmp creates=/etc/ansible/towerconf.log python towerconfig.py >> /etc/ansible/towerconf.log

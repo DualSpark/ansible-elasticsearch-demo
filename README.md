@@ -47,7 +47,7 @@ aws_secret_access_key = AWS_SECRET_ACCESS_KEY
 
 ## Resources deployed via CloudFormation
 
-You will also need AWS credentials to deploy a set of CloudFormation scripts which will crate an Elasticsearch deployment:
+You will also need AWS credentials to deploy a set of CloudFormation scripts which will create an Elasticsearch deployment:
 
 * 1 S3 Bucket
 * 1 public-facing ELB

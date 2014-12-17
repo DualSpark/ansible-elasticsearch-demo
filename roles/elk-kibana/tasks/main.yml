@@ -2,11 +2,11 @@
 - name: download kibana
   get_url: validate_certs=no url=https://download.elasticsearch.org/kibana/kibana/kibana-{{ kibana_version }}.tar.gz dest=/tmp/kibana.tar.gz mode=0644
 
-- name: Unarchive Kibana for hosting
-  unarchive: src=/tmp/kibana.tar.gz dest=/opt/
+- name: create extract folder
+  file: dest=/opt/kibana mode=640 owner=root group=root state=directory
 
-- name: Install OpenJDK7
-  apt: pkg=default-jre-headless state=present update_cache=yes
+- name: Unarchive Kibana for hosting
+  command: creates=/opt/kibana/index.html tar zxvf /tmp/kibana.tar.gz --strip 1 -C /opt/kibana
 
 - name: create htpasswd file
   htpasswd: path={{ kibana_htpasswd_path | default('/opt/kibana.htpasswd') }} name=admin password={{ kibana_password }} owner=root group=www-data mode=0640

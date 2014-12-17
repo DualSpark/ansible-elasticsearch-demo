@@ -1,1 +1,18 @@
 ---
+- name: Install Python Pip
+  apt: pkg=python-pip state=present update_cache=yes
+
+- name: Install Beaver
+  command: pip install beaver
+
+- name: move initd for Beaver
+  copy: creates=/etc/init.d/beaver src=beaver.init.d dest=/etc/init.d/beaver 
+
+- name: register beaver init script
+  command: update-rc.d beaver defaults
+
+- name: configure beaver
+  template: creates=/etc/beaver/conf src=beaver.conf.j2 dest=/etc/beaver/conf mode=0644
+  notify:
+    - Restart Beaver
+

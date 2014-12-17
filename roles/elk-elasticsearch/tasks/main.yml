@@ -8,13 +8,15 @@
 - name: Install ElasticSearch
   command: dpkg -i /tmp/elasticsearch.deb creates=/etc/elasticsearch
 
-- name: make directory for Elasticsearch
-  file: dest=/mnt mode=640 owner=elasticsearch group=elasticsearch state=directory
+- name: change ownership of mnt directory
+  command: chown elasticsearch:elasticsearch /mnt -R
+  notify:
+    - Resart Elasticsearch
 
 - name: Configure ElasticSearch
   template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml mode=0644
   notify:
-    - Restart ElasticSearch
+    - Restart Elasticsearch
 
 - name: Install Elasticsearch Plugins
   command: "{{ elasticsearch_base_dir }}/bin/plugin -install {{ item }}"

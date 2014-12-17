@@ -1,3 +1,3 @@
 ---
-- name: Restart ElasticSearch
+- name: Restart Elasticsearch
   service: name=elasticsearch state=restarted

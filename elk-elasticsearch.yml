@@ -6,6 +6,7 @@
   
   roles:
   - elk-elasticsearch
+  - beaver
 
 - name: Kibana Dashboard
   hosts: tag_ansible_group_elk-kibana
@@ -23,6 +24,7 @@
   
   roles:
   - elk-logstash
+  - beaver
 
 - name: ELK Scheduler
   hosts: tag_ansible_group_elk-scheduler

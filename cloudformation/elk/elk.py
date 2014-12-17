@@ -53,17 +53,19 @@ class Elk(TemplateBase):
                 logging_queue,
                 arg_dict.get('elk', {}))
 
+        log_shipper_policies = [iam.Policy(
+                    PolicyName='sqsWrite', 
+                    PolicyDocument={
+                        "Statement": [{
+                            "Effect" : "Allow", 
+                            "Action" : ["sqs:ChangeMessageVisibility","sqs:ChangeMessageVisibilityBatch","sqs:GetQueueAttributes","sqs:GetQueueUrl","sqs:ListQueues","sqs:SendMessage","sqs:SendMessageBatch"], 
+                            "Resource" : [GetAtt(logging_queue,'Arn')]}]})]
+
+
         scheduler_layer = self.add_scheduler_layer(security_groups['scheduler']['instance'], 
                 es_layer['elb'], 
+                log_shipper_policies,
                 arg_dict.get('elk', {}))
-
-        log_shipper_policies = [iam.Policy(
-                            PolicyName='sqsWrite', 
-                            PolicyDocument={
-                                "Statement": [{
-                                    "Effect" : "Allow", 
-                                    "Action" : ["sqs:ChangeMessageVisibility","sqs:ChangeMessageVisibilityBatch","sqs:GetQueueAttributes","sqs:GetQueueUrl","sqs:ListQueues","sqs:SendMessage","sqs:SendMessageBatch"], 
-                                    "Resource" : [GetAtt(logging_queue,'Arn')]}]})]
 
         log_shipper_user = self.template.add_resource(iam.User('logShipperUser', 
                 Policies=log_shipper_policies))

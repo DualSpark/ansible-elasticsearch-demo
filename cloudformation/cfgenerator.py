@@ -58,9 +58,9 @@ class DevDeploy(NetworkBase):
 
         elk_tier = Elk(arg_dict)
         elk_tier = self.add_child_template('elk', elk_tier)
-        self.add_ha_bastion_instance(elk_tier, arg_dict.get('bastion', {}))
+        self.add_bastion(elk_tier, arg_dict.get('bastion', {}))
 
-    def add_ha_bastion_instance(self, 
+    def add_bastion(self, 
             elk_tier,
             bastion_conf):
         '''
@@ -73,14 +73,6 @@ class DevDeploy(NetworkBase):
                 Description='Instance type to use when launching the Bastion host for access to resources that are not publicly exposed', 
                 ConstraintDescription=self.strings['valid_instance_type_message']))
 
-        bastion_elb_security_group = self.template.add_resource(ec2.SecurityGroup('bastionElbSecurityGroup', 
-                VpcId=Ref(self.vpc), 
-                GroupDescription='Security group allowing ingress via SSH to this instance along with other standard accessbility port rules', 
-                SecurityGroupIngress=[ec2.SecurityGroupRule(
-                        FromPort=bastion_conf.get('public_ssh_port', '2222'), 
-                        ToPort=bastion_conf.get('public_ssh_port', '2222'), 
-                        IpProtocol='tcp', 
-                        CidrIp=Ref(self.template.parameters['remoteAccessLocation']))]))
 
         bastion_security_group = self.template.add_resource(ec2.SecurityGroup('bastionSecurityGroup', 
                 VpcId=Ref(self.vpc), 
@@ -89,7 +81,7 @@ class DevDeploy(NetworkBase):
                         FromPort='22', 
                         ToPort='22', 
                         IpProtocol='tcp', 
-                        SourceSecurityGroupId=Ref(bastion_elb_security_group))],
+                        CidrIp='0.0.0.0/0')],
                 SecurityGroupEgress=[ec2.SecurityGroupRule(
                         FromPort='22', 
                         ToPort='22', 
@@ -106,31 +98,6 @@ class DevDeploy(NetworkBase):
                         IpProtocol='tcp',
                         CidrIp='0.0.0.0/0')]))
 
-        self.template.add_resource(ec2.SecurityGroupEgress('bastionElbSecurityGroupEgressSSHToInstance', 
-                GroupId=Ref(bastion_elb_security_group), 
-                DestinationSecurityGroupId=Ref(bastion_security_group), 
-                FromPort='22', 
-                ToPort='22', 
-                IpProtocol='tcp'))
-
-        bastion_elb = self.template.add_resource(elb.LoadBalancer('bastionElb', 
-            Subnets=self.subnets['public'], 
-            SecurityGroups=[Ref(bastion_elb_security_group)], 
-            CrossZone=True,
-            AccessLoggingPolicy=elb.AccessLoggingPolicy(
-                EmitInterval=5,
-                Enabled=True,
-                S3BucketName=Ref(self.utility_bucket)),
-            HealthCheck=elb.HealthCheck(
-                    HealthyThreshold=3, 
-                    UnhealthyThreshold=5,
-                    Interval=60, 
-                    Target=bastion_conf.get('healthcheck_protocol', 'tcp').upper() + ':' + bastion_conf.get('ssh_port', '22') , 
-                    Timeout=5), 
-            Listeners=[elb.Listener(
-                        LoadBalancerPort=bastion_conf.get('public_ssh_port', '2222'), 
-                        InstancePort=bastion_conf.get('ssh_port', '22'), 
-                        Protocol=bastion_conf.get('elb_protocol', 'tcp').upper())]))
 
         log_queue_arn = Join('', ['arn:aws:sqs:', GetAtt(elk_tier, 'Outputs.logShipperQueueRegion') ,':', Ref('AWS::AccountId'),':', GetAtt(elk_tier, 'Outputs.logShipperQueueName')])
 
@@ -163,20 +130,17 @@ class DevDeploy(NetworkBase):
             Default=bastion_conf.get('bastion_key_default', 'bastionEc2Key'),
             Description='EC2 key to use when deploying the bastion instance'))
 
-        bastion_asg = self.create_asg('bastionASG',
-                instance_profile=iam_profile,
-                ami_name="ubuntu1404LtsAmiId",
-                instance_type=instance_type,
-                security_groups=[bastion_security_group], 
-                min_size=1, 
-                max_size=1, 
-                ec2_key=Ref(ec2_key),
-                load_balancer={'public': bastion_elb},
-                include_ephemerals=False,
-                instance_monitoring=bastion_conf.get('instance_monitoring', False))
-
-        return {'elb': bastion_elb, 'asg': bastion_asg}
-
+        self.template.add_resource(ec2.Instance('bastionInstance',
+            IamInstanceProfile=Ref(iam_profile), 
+            ImageId=FindInMap('RegionMap', Ref('AWS::Region'), 'ubuntu1404LtsAmiId'), 
+            InstanceType=Ref(instance_type), 
+            KeyName=Ref(ec2_key),
+            Tags=[ec2.Tag('ansible_group', 'bastion')],
+            NetworkInterfaces=[ec2.NetworkInterfaceProperty(
+                DeviceIndex='0', 
+                AssociatePublicIpAddress=True, 
+                SubnetId=Ref(self.local_subnets['public']['0']))]
+            ))
 
 if __name__ == '__main__':
     arguments = docopt(__doc__, version='devtools 0.1')

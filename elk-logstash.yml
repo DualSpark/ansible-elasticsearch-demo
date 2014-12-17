@@ -1,8 +1,7 @@
 ---
 - name: Logstash Indexer
-  hosts: 127.0.0.1
+  hosts: logstash
   sudo: true
-  connection: local
   
   roles:
   - elk-logstash

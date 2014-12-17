@@ -1,0 +1,7 @@
+---
+- name: Bastion Host
+  hosts: scheduler
+  sudo: true
+  
+  roles:
+  - bastion

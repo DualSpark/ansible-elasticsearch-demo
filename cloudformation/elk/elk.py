@@ -183,6 +183,7 @@ class Elk(TemplateBase):
                                         "Resource": GetAtt(logging_queue, 'Arn')}]})]
         
         iam_profile = self.create_instance_profile('logstashIndexer', indexer_policies)
+        indexer_tags = [autoscaling.Tag('ansible_group', 'elk-indexer', True)]
 
         indexer_asg = self.create_asg('logstashIndexer', 
                 instance_profile=iam_profile, 
@@ -192,6 +193,7 @@ class Elk(TemplateBase):
                 min_size=int(indexer_args.get('indexer_min_size',1)), 
                 max_size=Ref(logstash_max_cluster_size), 
                 instance_monitoring=True,  
+                custom_tags=indexer_tags,
                 root_volume_type=indexer_args.get('root_volume_type', 'gp2'),
                 include_ephemerals=False)
 
@@ -240,6 +242,7 @@ class Elk(TemplateBase):
         @configarg instance_type_default [string] AWS EC2 Instance Type to be set as the default for the schedulerInstanceType parameter
         ''' 
         iam_profile = self.create_instance_profile('scheduler')
+        scheduler_tags = [autoscaling.Tag('ansible_group', 'elk-scheduler', True)]
 
         scheduler_asg = self.create_asg('scheduler', 
             instance_profile=iam_profile, 
@@ -249,6 +252,7 @@ class Elk(TemplateBase):
             max_size=1, 
             ami_name='ubuntu1404LtsAmiId',
             instance_monitoring=True, 
+            custom_tags=scheduler_tags,
             root_volume_type=scheduler_args.get('root_volume_type', 'gp2'),
             include_ephemerals=False)
 
@@ -312,6 +316,7 @@ class Elk(TemplateBase):
                                     "Resource" : "arn:aws:s3:::*"}]})]
 
         iam_profile = self.create_instance_profile('kibana', kibana_policies)
+        kibana_tags = [autoscaling.Tag('ansible_group', 'elk-kibana', True)]
 
         kibana_asg = self.create_asg('kibana', 
                 instance_profile=iam_profile, 
@@ -322,6 +327,7 @@ class Elk(TemplateBase):
                 ami_name='ubuntu1404LtsAmiId',
                 root_volume_type=kibana_args.get('root_volume_type', 'gp2'),
                 instance_monitoring=True, 
+                custom_tags=kibana_tags,
                 load_balancer=Ref(kibana_elb), 
                 include_ephemerals=False)
 
@@ -411,19 +417,17 @@ class Elk(TemplateBase):
                         Protocol='HTTP')], 
                 Scheme='internal'))
 
-        es_tags = [autoscaling.Tag(es_config.get('elasticsearch_discovery_tag_name','InstanceRole'), es_config.get('elasticsearch_discovery_tag_value','Elasticsearch'), True)]
-
-        ebs_data_volumes = [{'size':'20', 'type': 'gp2', 'delete_on_termination': False},{'size':'20', 'type': 'gp2', 'delete_on_termination': False},{'size':'20', 'type': 'gp2', 'delete_on_termination': False}]
+        es_tags = [autoscaling.Tag(es_config.get('elasticsearch_discovery_tag_name','InstanceRole'), es_config.get('elasticsearch_discovery_tag_value','Elasticsearch'), True),
+                    autoscaling.Tag('ansible_group', 'elk-elasticsearch', True)]
 
         es_asg = self.create_asg('elasticsearch', 
                 instance_profile=iam_profile, 
                 ami_name='ubuntu1404LtsAmiId',
                 instance_type=es_config.get('elasticsearch_instance_type_default', 'c3.large'),
                 security_groups=[instance_sg, self.common_security_group], 
-                min_size=str(es_config.get('elasticsearch_cluster_size_default', 5)), 
-                max_size=str(es_config.get('elasticsearch_cluster_size_default', 5)), 
+                min_size=str(es_config.get('elasticsearch_cluster_size_default', 3)), 
+                max_size=str(es_config.get('elasticsearch_cluster_size_default', 3)), 
                 root_volume_type=es_config.get('root_volume_type', 'gp2'),
-                ebs_data_volumes=ebs_data_volumes,
                 instance_monitoring=True, 
                 custom_tags=es_tags, 
                 load_balancer=Ref(es_elb))

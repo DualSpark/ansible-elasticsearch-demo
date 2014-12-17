@@ -15,7 +15,7 @@
   command: creates=/opt/kibana/config.js tar zxvf /tmp/kibana.tar.gz --strip 1 -C /opt/kibana
 
 - name: Update kibana routing for elasticsearch
-  replace: dest=/opt/kibana/config.js regexp='\":9200\"' replace='"elasticserach"'
+  replace: dest=/opt/kibana/config.js regexp='\":9200\"' replace='"elasticsearch"'
 
 - name: create htpasswd file
   htpasswd: path={{ kibana_htpasswd_path | default('/opt/kibana.htpasswd') }} name=admin password={{ kibana_password }} owner=root group=www-data mode=0640

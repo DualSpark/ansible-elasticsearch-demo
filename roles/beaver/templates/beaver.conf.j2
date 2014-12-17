@@ -2,7 +2,7 @@
 format: json
 logstash_version: 1
 sqs_aws_region: {{ input_sqs_region | default('us-east-1') }}
-sqs_aws_quque: {{ input_sqs_queuename }}
+sqs_aws_queue: {{ input_sqs_queuename }}
 
 [/var/log/*log]
 type: syslog

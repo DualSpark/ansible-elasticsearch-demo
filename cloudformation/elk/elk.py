@@ -236,6 +236,7 @@ class Elk(TemplateBase):
     def add_scheduler_layer(self, 
             instance_sg, 
             elasticsearch_elb, 
+            log_shipper_policies,
             scheduler_args):
         '''
         Method creates a single scheduler instance that manages running api-driven tasks via HTTP for Elasticsearch on a scheduler

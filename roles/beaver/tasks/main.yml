@@ -6,7 +6,7 @@
   command: pip install beaver
 
 - name: move initd for Beaver
-  copy: src=beaver.init.d dest=/etc/init.d/beaver 
+  copy: src=beaver.init.d dest=/etc/init.d/beaver mode=0744
 
 - name: register beaver init script
   command: update-rc.d beaver defaults

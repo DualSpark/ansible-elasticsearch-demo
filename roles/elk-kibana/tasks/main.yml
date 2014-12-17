@@ -15,13 +15,16 @@
   command: creates=/opt/kibana/config.js tar zxvf /tmp/kibana.tar.gz --strip 1 -C /opt/kibana
 
 - name: Update kibana routing for elasticsearch
-  replace: dest=/opt/kibana/config.js regexp='\":9200\"' replace='"elasticsearch"'
+  replace: dest=/opt/kibana/config.js regexp='\":9200\"' replace='"/elasticsearch"'
 
 - name: create htpasswd file
   htpasswd: path={{ kibana_htpasswd_path | default('/opt/kibana.htpasswd') }} name=admin password={{ kibana_password }} owner=root group=www-data mode=0640
 
 - name: install Nginx from apt
   apt: name=nginx state=latest update_cache=yes
+
+- name: set permissions of kibana
+  command: chmod 777 -R /opt/kibana
 
 - name: Configure Kibana in Nginx
   template: src=kibana.nginx.conf.j2 dest=/etc/nginx/nginx.conf group=www-data mode=0644

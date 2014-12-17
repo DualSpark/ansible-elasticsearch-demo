@@ -11,6 +11,9 @@
 - name: register beaver init script
   command: update-rc.d beaver defaults
 
+- name: create extract folder
+  file: dest=/etc/beaver mode=640 owner=root group=root state=directory
+
 - name: configure beaver
   template: src=beaver.conf.j2 dest=/etc/beaver/conf mode=0644
   notify:

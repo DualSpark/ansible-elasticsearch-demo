@@ -12,7 +12,7 @@
   command: update-rc.d beaver defaults
 
 - name: configure beaver
-  template: creates=/etc/beaver/conf src=beaver.conf.j2 dest=/etc/beaver/conf mode=0644
+  template: src=beaver.conf.j2 dest=/etc/beaver/conf mode=0644
   notify:
     - Restart Beaver
 

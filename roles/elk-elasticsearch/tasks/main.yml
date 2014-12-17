@@ -19,7 +19,7 @@
     - Restart Elasticsearch
 
 - name: set Elasticsearch defaults
-  copy: src=elasticsearch.default dest=/etc/default/elasticsearch user=root group=root mode=0644
+  copy: src=elasticsearch.default dest=/etc/default/elasticsearch owner=root group=root mode=0644
 
 - name: Install Elasticsearch Plugins
   command: "{{ elasticsearch_base_dir }}/bin/plugin -install {{ item }}"

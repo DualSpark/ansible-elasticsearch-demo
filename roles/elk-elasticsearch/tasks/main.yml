@@ -11,7 +11,7 @@
 - name: change ownership of mnt directory
   command: chown elasticsearch:elasticsearch /mnt -R
   notify:
-    - Resart Elasticsearch
+    - Restart Elasticsearch
 
 - name: Configure ElasticSearch
   template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml mode=0644

@@ -1,18 +1,18 @@
 Host bastion
-    User                   {{ bastion_user | default('ubuntu') }}
-    HostName               {{ bastion_host | default('ec2-54-148-35-101.us-west-2.compute.amazonaws.com') }}
+    User                   ubuntu
+    HostName               ec2-54-148-35-101.us-west-2.compute.amazonaws.com
     ProxyCommand           none
     Port                   22
-    IdentityFile           {{ bastion_key_name | default('bastionInstanceKey') }}.pem
+    IdentityFile           /etc/ansible/bastionInstanceKey.pem
     BatchMode              yes
     PasswordAuthentication no
 
 Host *
     ServerAliveInterval    60
     TCPKeepAlive           yes
-    ProxyCommand           ssh -q -A {{ instance_user | default('ubuntu') }}@###.###.###.### nc %h %p
+    ProxyCommand           ssh -q -A ubuntuec2-54-148-35-101.us-west-2.compute.amazonaws.com -i /etc/ansible/bastionInstanceKey.pem nc %h %p
     ControlMaster          auto
     ControlPath            ~/.ssh/mux-%r@%h:%p
     ControlPersist         8h
     User                   ubuntu
-    IdentityFile           {{ ec2_key_name | default('ec2InstanceKey') }}.pem
+    IdentityFile           /etc/ansible/demoInstanceKey.pem

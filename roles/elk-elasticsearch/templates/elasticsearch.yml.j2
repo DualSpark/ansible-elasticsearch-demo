@@ -336,10 +336,10 @@ discovery.zen.ping.multicast.enabled: {{ discovery_zen_ping_multicast_enabled | 
 # for a step-by-step tutorial.
 
 discovery:
-	type: ec2
-	ec2:
-		tag:
-			{{ elasticsearch_cluster_tag_name | default('InstanceRole') }}: {{ elasticsearch_cluster_tag_value }}
+    type: ec2
+    ec2:
+        tag:
+            {{ elasticsearch_cluster_tag_name | default('InstanceRole') }}: {{ elasticsearch_cluster_tag_value }}
 
 # GCE discovery allows to use Google Compute Engine API in order to perform discovery.
 #

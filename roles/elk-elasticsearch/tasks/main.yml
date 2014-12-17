@@ -17,6 +17,7 @@
   command: "{{ elasticsearch_base_dir }}/bin/plugin -install {{ item }}"
   with_items: 
     - "{{ plugin_install }}"
+  ignore_errors: yes
 
 - name: Enable ElasticSearch service
   service: name=elasticsearch enabled=yes state=started

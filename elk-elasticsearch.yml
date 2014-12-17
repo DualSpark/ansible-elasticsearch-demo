@@ -1,6 +1,6 @@
 ---
 - name: Elasticsearch cluster config
-  hosts: ec2_tag_ansible_group_elk-elasticsearch
+  hosts: tag_ansible_group_elk-elasticsearch
   sudo: true
   gather_facts: true
   
@@ -8,7 +8,7 @@
   - elk-elasticsearch
 
 - name: Kibana Dashboard
-  hosts: ec2_tag_ansible_group_elk-kibana
+  hosts: tag_ansible_group_elk-kibana
   sudo: true
   gather_facts: true
 
@@ -16,7 +16,7 @@
   - elk-kibana
 
 - name: Logstash Indexer
-  hosts: ec2_tag_ansible_group_elk-logstash
+  hosts: tag_ansible_group_elk-logstash
   sudo: true
   gather_facts: true
   
@@ -24,7 +24,7 @@
   - elk-logstash
 
 - name: ELK Scheduler
-  hosts: ec2_tag_ansible_group_elk-scheduler
+  hosts: tag_ansible_group_elk-scheduler
   sudo: true
   gather_facts: true
   

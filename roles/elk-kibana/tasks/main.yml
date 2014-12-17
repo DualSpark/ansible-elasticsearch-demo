@@ -2,6 +2,12 @@
 - name: download kibana
   get_url: validate_certs=no url=https://download.elasticsearch.org/kibana/kibana/kibana-{{ kibana_version }}.tar.gz dest=/tmp/kibana.tar.gz mode=0644
 
+- name: Install Python Pip
+  apt: pkg=python-pip state=present update_cache=yes
+
+- name: Install Passlib
+  command: pip install passlib 
+
 - name: create extract folder
   file: dest=/opt/kibana mode=640 owner=root group=root state=directory
 

@@ -1,0 +1,30 @@
+---
+- stat: path=/var/lib/dpkg/info/logstash.list
+  register: logstash
+
+- stat: path=/var/lib/dpkg/info/logstash-contrib.list
+  register: logstashcontrib
+
+- name: Install OpenJDK7
+  apt: pkg=default-jre-headless state=present update_cache=yes
+
+- name: download logstash core
+  get_url: validate_certs=no url=https://download.elasticsearch.org/logstash/logstash/packages/debian/logstash_{{ logstash_version }}_all.deb dest=/tmp/logstash.deb mode=0644
+  when: not logstash.stat.exists
+
+- name: download logstash contrib
+  get_url: validate_certs=no url=https://download.elasticsearch.org/logstash/logstash/packages/debian/logstash-contrib_{{ logstash_contrib_version }}_all.deb dest=/tmp/logstash_contrib.deb mode=0644
+  when: not logstashcontrib.stat.exists
+
+- name: Install Logstash
+  command: dpkg -i /tmp/logstash.deb creates=/var/lib/dpkg/info/logstash.list
+  when: not logstash.stat.exists
+
+- name: Install Logstash Contrib
+  command: dpkg -i /tmp/logstash_contrib.deb creates=/var/lib/dpkg/info/logstash-contrib.list
+  when: not logstashcontrib.stat.exists
+
+- name: Configure Logstash
+  template: src=logstash.conf.j2 dest=/etc/logstash/conf.d/indexer.conf mode=0644
+  notify:
+    - Restart Logstash

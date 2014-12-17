@@ -1,0 +1,5 @@
+---
+aws_region: us-west-2
+s3_bucket: cfdev-dualspark
+ec2_key_name: demoInstanceKey
+bastion_key_name: demoBastionKey

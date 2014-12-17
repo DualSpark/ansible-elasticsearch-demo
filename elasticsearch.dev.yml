@@ -1,6 +1,0 @@
-- name: Test Elasticsearch
-  hosts: elasticsearch.vagrant.dev
-  sudo: true
-  
-  roles:
-  - elk-elasticsearch

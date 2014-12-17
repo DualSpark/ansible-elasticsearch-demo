@@ -1,17 +1,31 @@
 ---
 - name: download elasticsearch
-  get_url: url=https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-{{ elasticsearch_version }}.deb dest=/tmp/elasticsearch.deb mode=0644
+  get_url: validate_certs=no url=https://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-{{ elasticsearch_version }}.deb dest=/tmp/elasticsearch.deb mode=0644
 
 - name: Install OpenJDK7
-  apt: pkg=default-jre-headless state=present
+  apt: pkg=default-jre-headless state=present update_cache=yes
 
 - name: Install ElasticSearch
-  command: sudo dpkg -i /tmp/elasticsearch.deb creates=/etc/elasticsearch
+  command: dpkg -i /tmp/elasticsearch.deb creates=/etc/elasticsearch
+
+- name: change ownership of mnt directory
+  command: chown elasticsearch:elasticsearch /mnt -R
+  notify:
+    - Restart Elasticsearch
 
 - name: Configure ElasticSearch
   template: src=elasticsearch.yml.j2 dest=/etc/elasticsearch/elasticsearch.yml mode=0644
   notify:
-    - Restart ElasticSearch
+    - Restart Elasticsearch
+
+- name: set Elasticsearch defaults
+  copy: src=elasticsearch.default dest=/etc/default/elasticsearch owner=root group=root mode=0644
+
+- name: Install Elasticsearch Plugins
+  command: "{{ elasticsearch_base_dir }}/bin/plugin -install {{ item }}"
+  with_items: 
+    - "{{ plugin_install }}"
+  ignore_errors: yes
 
 - name: Enable ElasticSearch service
   service: name=elasticsearch enabled=yes state=started

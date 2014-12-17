@@ -1,0 +1,16 @@
+[beaver]
+format: json
+logstash_version: 1
+sqs_aws_region: {{ input_sqs_region | default('us-east-1') }}
+sqs_aws_quque: {{ input_sqs_queuename }}
+
+[/var/log/*log]
+type: syslog
+tags: sys
+exclude: (messages|secure)
+add_field: instance-id,{{ ec2_id }},instance-type,{{ ec2_instance_type }},ip-address,{{ ec2_private_ip_address }}
+
+[/var/log/{messages,secure}.log]
+type: syslog
+tags: sys
+add_field: instance-id,{{ ec2_id }},instance-type,{{ ec2_instance_type }},ip-address,{{ ec2_private_ip_address }}

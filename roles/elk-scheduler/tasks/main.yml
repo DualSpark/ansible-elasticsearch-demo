@@ -1,0 +1,12 @@
+---
+- name: Install required packages
+  apt: pkg={{ item }} state=present update_cache=yes
+  with_items:
+    - python-dev
+    - python-pip
+
+- name: Install required python packages
+  shell: pip install docopt
+
+- name: Deploy Elasticsearch snapshot script
+  copy: src=elasticsearch.snapshot.py dest=/usr/bin/{{ snapshot_command_name | default('esSnapshot') }} mode=744 owner=root group=root

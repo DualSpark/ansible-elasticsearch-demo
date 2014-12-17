@@ -1,6 +1,7 @@
 - name: Deploy Tower
-  hosts: tower.vagrant.dev
+  hosts: tower
   sudo: true
   
   roles:
+  - cfnbuilder
   - tower

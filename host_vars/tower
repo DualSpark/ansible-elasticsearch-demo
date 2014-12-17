@@ -1,4 +1,4 @@
-tower_version: 2.0.4
+tower_version: latest
 ansible_version: 1.8.2
 configdir: /etc/ansible
 clirepository: https://github.com/ansible/awx-cli.git

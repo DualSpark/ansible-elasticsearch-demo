@@ -1,0 +1,18 @@
+Host bastion
+    User                   ubuntu
+    HostName               ec2-54-148-35-101.us-west-2.compute.amazonaws.com
+    ProxyCommand           none
+    Port                   22
+    IdentityFile           /etc/ansible/bastionInstanceKey.pem
+    BatchMode              yes
+    PasswordAuthentication no
+
+Host *
+    ServerAliveInterval    60
+    TCPKeepAlive           yes
+    ProxyCommand           ssh -q -A ubuntuec2-54-148-35-101.us-west-2.compute.amazonaws.com -i /etc/ansible/bastionInstanceKey.pem nc %h %p
+    ControlMaster          auto
+    ControlPath            ~/.ssh/mux-%r@%h:%p
+    ControlPersist         8h
+    User                   ubuntu
+    IdentityFile           /etc/ansible/demoInstanceKey.pem

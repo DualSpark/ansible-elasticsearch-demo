@@ -1,6 +1,6 @@
 ---
 - name: install EPEL repo
-  yum: name=http://fedora.mirrors.pair.com/epel/7/x86_64/e/epel-release-7-2.noarch.rpm state=present
+  yum: name=http://fedora.mirrors.pair.com/epel/7/x86_64/e/epel-release-7-5.noarch.rpm state=present
 
 - name: yum update all the things
   yum: name=* state=latest
@@ -15,14 +15,17 @@
   - ansible 
 
 - name: download Tower setup
-  get_url: url=http://releases.ansible.com/ansible-tower/setup/ansible-tower-setup-{{tower_version}}.tar.gz
-    dest=/opt/ force=yes
+  get_url: url=http://releases.ansible.com/ansible-tower/setup/ansible-tower-setup-{{tower_version}}.tar.gz dest=/opt/ force=yes
+
+- name: create extract folder
+  file: dest=/opt/ansible-tower-setup mode=640 owner=root group=root state=directory
 
 - name: extract Tower
-  command: chdir=/opt/ creates=/opt/ansible-tower-setup-{{tower_version}} tar zxvf ansible-tower-setup-{{tower_version}}.tar.gz
+  command: chdir=/opt/ creates=/opt/ansible-tower-setup/setup.py tar zxvf ansible-tower-setup-{{tower_version}}.tar.gz --strip 1 -C /opt/ansible-tower-setup
 
 - name: run the Tower installer
-  command: chdir=/opt/ansible-tower-setup-{{tower_version}} creates=/etc/awx/settings.py ./setup.sh
+  command: chdir=/opt/ansible-tower-setup creates=/etc/awx/settings.py ./setup.sh
+  ignore_errors: True
 
 - name: create etc ansible directory
   action: file dest={{configdir}} state=directory
@@ -32,3 +35,15 @@
 
 - name: install tower cli
   shell: pip install ansible-tower-cli
+
+- name: put tower cli config in place
+  copy: src=tower_cli.cfg dest=/etc/awx/tower_cli.cfg
+
+- name: put tower cli group file in tmp
+  copy: src=tower_group.yml dest=/tmp/tower_group.yml
+
+- name: pull over tower config python script
+  copy: src=towerconfig.py dest=/tmp/towerconfig.py
+
+- name: run tower config and update
+  command: chdir=/tmp creates=/etc/ansible/towerconf.log python towerconfig.py >> /etc/ansible/towerconf.log

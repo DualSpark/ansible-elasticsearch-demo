@@ -1,4 +1,33 @@
 ---
-- name: download elasticsearch
-  get_url: url=https://download.elasticsearch.org/kibana/kibana/kibana-{{ kibana_version }}.tar.gz dest=/tmp/kibana.tar.gz mode=0644
+- name: download kibana
+  get_url: validate_certs=no url=https://download.elasticsearch.org/kibana/kibana/kibana-{{ kibana_version }}.tar.gz dest=/tmp/kibana.tar.gz mode=0644
+
+- name: Install Python Pip
+  apt: pkg=python-pip state=present update_cache=yes
+
+- name: Install Passlib
+  command: pip install passlib 
+
+- name: create extract folder
+  file: dest=/opt/kibana mode=640 owner=root group=root state=directory
+
+- name: Unarchive Kibana for hosting
+  command: creates=/opt/kibana/config.js tar zxvf /tmp/kibana.tar.gz --strip 1 -C /opt/kibana
+
+- name: Update kibana routing for elasticsearch
+  replace: dest=/opt/kibana/config.js regexp='\":9200\"' replace='"/elasticsearch"'
+
+- name: create htpasswd file
+  htpasswd: path={{ kibana_htpasswd_path | default('/opt/kibana.htpasswd') }} name=admin password={{ kibana_password }} owner=root group=www-data mode=0640
+
+- name: install Nginx from apt
+  apt: name=nginx state=latest update_cache=yes
+
+- name: set permissions of kibana
+  command: chmod 777 -R /opt/kibana
+
+- name: Configure Kibana in Nginx
+  template: src=kibana.nginx.conf.j2 dest=/etc/nginx/nginx.conf group=www-data mode=0644
+  notify:
+    - Restart Nginx
 

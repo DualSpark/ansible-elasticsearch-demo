@@ -16,7 +16,7 @@
   - elk-kibana
 
 - name: Logstash Indexer
-  hosts: tag_ansible_group_elk-logstash
+  hosts: tag_ansible_group_elk-indexer
   sudo: true
   gather_facts: true
   

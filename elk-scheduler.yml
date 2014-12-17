@@ -1,7 +1,0 @@
----
-- name: ELK Scheduler
-  hosts: scheduler
-  sudo: true
-  
-  roles:
-  - elk-scheduler

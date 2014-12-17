@@ -1,7 +1,0 @@
----
-- name: Logstash Indexer
-  hosts: logstash
-  sudo: true
-  
-  roles:
-  - elk-logstash

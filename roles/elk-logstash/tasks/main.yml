@@ -9,11 +9,11 @@
   apt: pkg=default-jre-headless state=present update_cache=yes
 
 - name: download logstash core
-  get_url: url=https://download.elasticsearch.org/logstash/logstash/packages/debian/logstash_{{ logstash_version }}_all.deb dest=/tmp/logstash.deb mode=0644
+  get_url: validate_certs=no url=https://download.elasticsearch.org/logstash/logstash/packages/debian/logstash_{{ logstash_version }}_all.deb dest=/tmp/logstash.deb mode=0644
   when: not logstash.stat.exists
 
 - name: download logstash contrib
-  get_url: url=https://download.elasticsearch.org/logstash/logstash/packages/debian/logstash-contrib_{{ logstash_contrib_version }}_all.deb dest=/tmp/logstash_contrib.deb mode=0644
+  get_url: validate_certs=no url=https://download.elasticsearch.org/logstash/logstash/packages/debian/logstash-contrib_{{ logstash_contrib_version }}_all.deb dest=/tmp/logstash_contrib.deb mode=0644
   when: not logstashcontrib.stat.exists
 
 - name: Install Logstash

@@ -1,6 +1,6 @@
 ---
 - name: download kibana
-  get_url: url=https://download.elasticsearch.org/kibana/kibana/kibana-{{ kibana_version }}.tar.gz dest=/tmp/kibana.tar.gz mode=0644
+  get_url: validate_certs=no url=https://download.elasticsearch.org/kibana/kibana/kibana-{{ kibana_version }}.tar.gz dest=/tmp/kibana.tar.gz mode=0644
 
 - name: Unarchive Kibana for hosting
   unarchive: src=/tmp/kibana.tar.gz dest=/opt/

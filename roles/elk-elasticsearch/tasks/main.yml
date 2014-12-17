@@ -5,12 +5,6 @@
 - name: Install OpenJDK7
   apt: pkg=default-jre-headless state=present update_cache=yes
 
-- name: Copy mount script over
-  copy: src=mount_ec2_volumes.sh dest=/tmp/mount_ec2_volumes.sh owner=root group=root mode=744
-
-- name: Mount Volumes
-  command: chdir=/tmp creates=/data/volumes ./mount_ec2_volumes.sh 
-
 - name: Install ElasticSearch
   command: dpkg -i /tmp/elasticsearch.deb creates=/etc/elasticsearch
 

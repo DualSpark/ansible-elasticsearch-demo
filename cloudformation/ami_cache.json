@@ -8,7 +8,7 @@
     "ubuntu1404LtsAmiId": "ami-736e6536"
   },
   "us-west-2": {
-    "natAmiId": "ami-37501207",
+    "natAmiId": "ami-6d29b85d",
     "ubuntu1404LtsAmiId": "ami-37501207"
   }, 
   "eu-west-1": {
